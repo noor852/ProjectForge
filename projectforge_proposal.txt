@@ -1,0 +1,64 @@
+WEB PROGRAMMING
+Project Proposal
+Section Number	BCS-7A
+Group Member 1	Ramiza Munir (23L-0862)
+Group Member 2	Noor Fatima (23L-0817)
+Project Title	ProjectForge
+
+Project Scope
+ProjectForge is a MERN-based web application for university group formation. It helps students create/post projects, discover suitable teammates, and form balanced teams based on project requirements and student profiles.
+The core of the system is a project-aware matching algorithm that considers both the project requirements and the skills already present in the team.
+Scope
+The system will cover:
+1.	Student Registration & Authentication 
+2.	Student Profile
+3.	Create and manage an FYP/Project 
+4.	Project Discovery
+5.	Teammate Discovery
+6.	Matching Algorithm 
+7.	Team-Aware Matching 
+8.	Compatibility Explanation
+9.	Team Impact Analysis
+10.	Join Requests & Invitations
+11.	Team Formation
+12.	Team Skill Coverage and Skill Gap Detection
+13.	Project Status
+14.	Project/Student Detail Pages 
+The application will be developed using the MERN stack:
+Main Functionalities
+1. Student Registration & Authentication
+ProjectForge will provide secure student registration and authentication so that each user has an individual account and profile. Students will be able to register, log in, log out, and manage their account. Authentication will ensure that project information, team membership, requests, and other user-specific functionality are accessible only to authorized users.
+________________________________________
+2. Student Profile
+Students will create profiles containing information relevant to project and team formation, including their technical skills, proficiency levels, preferred roles, technologies, areas of interest, availability, experience, and a short introduction. The profile will serve as the primary source of information used by ProjectForge when determining which projects and teammates may be suitable for a student.
+________________________________________
+3. Create and manage an FYP/Project
+Students will be able to create and publish FYP or university project ideas by providing information such as the project title, description, domain, expected duration, target team size, technologies, required skills, and required roles. Project creators can also indicate the importance of different skills, allowing ProjectForge to distinguish between essential and secondary requirements when evaluating potential teammates. Project owners will be able to manage the projects they create by editing project information, updating requirements, changing project status, managing team members, and closing or archiving projects. This allows a project to evolve as its team is formed and as its requirements become clearer.________________________________________
+4. Project Discovery
+Students who are looking for an FYP or group will be able to browse projects available on the platform. Projects can be searched and filtered according to factors such as domain, required skills, technologies, team size, project status, and other relevant criteria. Students can open a project's details to understand its objectives, requirements, current team composition, and the type of members the project is looking for.________________________________________
+5. Teammate Discovery
+ProjectForge will present relevant students based on the requirements of the project and provide information about their skills, roles, interests, experience, and compatibility. Users can filter or explore candidates and open detailed profiles before deciding whether to invite them to the project.
+ProjectForge could also automatically recommend projects to students based on their profiles rather than requiring them to search manually. Recommendations would consider the student's skills, interests, preferred roles, and other profile information to identify projects where they could make a meaningful contribution.________________________________________
+6. Matching Algorithm 
+The matching engine will evaluate the relationship between a project and potential students using multiple factors, including relevant skills, proficiency, preferred roles, technologies, interests, availability, and experience. These factors will be combined into a compatibility score that allows ProjectForge to rank candidates according to how well they satisfy the project's requirements. The ranking is intended to prioritize relevant candidates rather than simply displaying students in an arbitrary order.
+________________________________________
+7. Team-Aware Matching 
+Team-aware matching extends candidate ranking by considering the current composition of the project team. Instead of evaluating every candidate independently, ProjectForge identifies the skills and roles already represented within the team and determines which capabilities are still missing or underrepresented. Candidates who can fill important gaps receive greater relevance in the recommendations, allowing the system to continuously adapt as members join or leave the team.________________________________________
+8. Compatibility Explanation
+ProjectForge will explain why a particular student or project has been considered compatible instead of presenting users with only an unexplained compatibility score. The explanation will identify the factors contributing to the match, such as relevant skills, proficiency, role suitability, interests, technologies, availability, and contribution to current team requirements. This makes the recommendation system more transparent and allows users to make informed decisions about potential teammates or projects.________________________________________
+9. Team Impact Analysis
+Team impact analysis evaluates the potential effect of adding a particular candidate to the existing team. Rather than considering only the candidate's individual compatibility with the project, ProjectForge determines whether their skills and role would improve the team's overall composition. This allows the system to identify candidates who may provide particularly valuable complementary expertise and helps prevent teams from becoming unnecessarily concentrated in the same skill areas.
+________________________________________
+10. Join Requests & Invitations
+ProjectForge will support two-way collaboration; Students can send requests to join projects that interest them, while project creators can invite suitable students to join their teams. Both parties can review the relevant project or student information before accepting or declining a request or invitation. This creates a structured process for forming teams without requiring students to rely on external communication channels.________________________________________
+11. Team Formation
+Once a request or invitation is accepted, the student can become a member of the project team. Project owners will be able to view and manage their team members, while the system will maintain the relationship between each student and their selected project role. Team formation will continue until the project reaches its desired team size or the project owner decides that the required team composition has been achieved.________________________________________
+12. Team Skill Coverage and Skill Gap Detection
+Team skill coverage compares the skills and roles required by a project with the combined capabilities of its current team members. ProjectForge will determine which requirements are sufficiently covered, partially represented, or missing. This allows the team to understand its current strengths and weaknesses and provides information that can be fed back into the matching system to determine what type of teammate should be sought next.
+Skill gap detection identifies important capabilities that are missing or insufficiently represented within a team. Rather than requiring students to manually compare project requirements with every team member's profile, ProjectForge analyzes the team's collective skills and highlights areas that require additional expertise. These gaps can then influence candidate ranking so that future recommendations focus on candidates who address the team's specific needs.________________________________________
+13. Project Status
+Projects will have different statuses representing their stage in the team formation and development process, such as draft, looking for members, team forming, team complete, and in progress. Project status will help students understand whether a project is currently accepting members and allow project creators to communicate the current stage of their group.________________________________________
+14. Project/Student Detail Pages
+Users will be able to open detailed views of projects and students before making collaboration decisions. A project page will provide its description, requirements, current team, and remaining needs, while a student page will provide their relevant skills, roles, interests, experience, and other profile information. These pages ensure that users can make decisions using more information than the compatibility score alone.
+
+
