@@ -30,6 +30,7 @@ function Register(){
     <form onClick={userExists}>
         <label>Email</label>
         <input type="text" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)}></input>
+        <label>Password</label>
         <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}></input>
     </form>
 }

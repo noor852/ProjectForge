@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import Navbar from './navbar'
 import './App.css'
-import Navbar from './navbar'
 
 function App() {
 
