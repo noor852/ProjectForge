@@ -34,3 +34,5 @@ function Register(){
         <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}></input>
     </form>
 }
+
+export default Register;
