@@ -1,6 +1,6 @@
 import {createSlice, createAsyncThunk} from "@reduxjs/toolkit";
 
-async function request(url, options = {}) {
+export async function request(url, options = {}) {
   const token = localStorage.getItem("token");
   const res = await fetch(url, {
     ...options,
@@ -48,14 +48,14 @@ export const fetchMe = createAsyncThunk("auth/me", async (_, {rejectWithValue}) 
     }
 });
 
-const saveSession = (state, {payload}) => {
-    console.log("payload:", payload);
-    state.loading = false;
-    state.error = null;
-    state.user = payload.user;
-    state.token = payload.token;
-    localStorage.setItem("token", payload.token);
-}
+const saveSession = (state, { payload }) => {
+  state.loading = false;
+  state.initializing = false;   // needed
+  state.error = null;
+  state.user = payload.user;
+  state.token = payload.token;
+  localStorage.setItem("token", payload.token);
+};
 
 const authSlice = createSlice({
     name: "auth", 
