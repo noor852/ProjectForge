@@ -10,6 +10,8 @@ app.get("/", (req, res) => {
     res.send("server is up!");
 });
 
+app.use("/api/auth", require("./routes/authRoutes"));  
+
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
