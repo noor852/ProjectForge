@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 
 const projectSkills = new mongoose.Schema({
         name: {type: String, lowercase: true, trim: true},
@@ -20,7 +20,9 @@ const projectSchema = new mongoose.Schema({
     teamSize: {type: Number, default: 4},
     technologies: [String],
     requiredSkills: [projectSkills],
+    rolesNeeded: [String],
     status: {type: String, enum: ['draft', 'looking', 'forming', 'complete', 'in_progress'], default: 'looking'},
     owner: {type: mongoose.Schema.Types.ObjectId, ref: "User", required: true},
     members: [projectMembers]
 }, {timestamps: true});
+module.exports = mongoose.model("Project", projectSchema);

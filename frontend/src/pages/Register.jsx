@@ -1,50 +1,60 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
-import { registerUser } from "../features/authSlice";
+import { request } from "../api";
 
-export default function Register() {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [localError, setLocalError] = useState("");
-  const dispatch = useDispatch();
+function Register(props) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { loading } = useSelector((s) => s.auth);
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setLocalError("");
+    setError("");
+    setLoading(true);
     try {
-      await dispatch(registerUser(form)).unwrap(); // throws if registration failed
-      navigate("/profile");                        // new users fill in their profile first
+      const data = await request("/api/auth/register", "POST", {
+        name: name,
+        email: email,
+        password: password
+      });
+      props.onLogin(data);
+      navigate("/profile"); // naya user pehle profile bharega
     } catch (err) {
-      setLocalError(typeof err === "string" ? err : "Registration failed");
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="card auth-card form" onSubmit={handleSubmit}>
       <h2>Create account</h2>
       <input
         type="text"
         placeholder="Name"
-        value={form.name}
-        onChange={(e) => setForm({ ...form, name: e.target.value })}
+        value={name}
+        onChange={function (e) { setName(e.target.value); }}
       />
       <input
         type="email"
         placeholder="Email"
-        value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
+        value={email}
+        onChange={function (e) { setEmail(e.target.value); }}
       />
       <input
         type="password"
         placeholder="Password (min 6 characters)"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
+        value={password}
+        onChange={function (e) { setPassword(e.target.value); }}
       />
       <button disabled={loading}>{loading ? "Creating..." : "Register"}</button>
-      {localError && <p style={{ color: "red" }}>{localError}</p>}
+      {error && <p className="error">{error}</p>}
       <Link to="/login">Already have an account? Login</Link>
     </form>
   );
 }
+
+export default Register;

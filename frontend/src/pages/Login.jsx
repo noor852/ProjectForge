@@ -1,44 +1,49 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
-import { loginUser } from "../features/authSlice";
+import { request } from "../api";
 
-export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [localError, setLocalError] = useState("");
-  const dispatch = useDispatch();
+function Login(props) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { loading } = useSelector((s) => s.auth);
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setLocalError("");
+    setError("");
+    setLoading(true);
     try {
-      await dispatch(loginUser(form)).unwrap(); // throws if login failed
+      const data = await request("/api/auth/login", "POST", { email: email, password: password });
+      props.onLogin(data);
       navigate("/");
     } catch (err) {
-      setLocalError(typeof err === "string" ? err : "Login failed");
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="card auth-card form" onSubmit={handleSubmit}>
       <h2>Login</h2>
       <input
         type="email"
         placeholder="Email"
-        value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
+        value={email}
+        onChange={function (e) { setEmail(e.target.value); }}
       />
       <input
         type="password"
         placeholder="Password"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
+        value={password}
+        onChange={function (e) { setPassword(e.target.value); }}
       />
       <button disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
-      {localError && <p style={{ color: "red" }}>{localError}</p>}
+      {error && <p className="error">{error}</p>}
       <Link to="/register">Create account</Link>
     </form>
   );
 }
+
+export default Login;

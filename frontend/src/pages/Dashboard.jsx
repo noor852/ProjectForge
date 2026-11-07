@@ -1,17 +1,13 @@
-import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../features/authSlice";
+import { Link } from "react-router-dom";
 
-function Dashboard()
-{
-    const user = useSelector((state) => state.auth.user);
-    const dispatch = useDispatch();
-
-    return(
-        <div>
-            <h2>Welcome, {user?.name}</h2>
-            <button onClick={() => dispatch(logout())}>Logout</button>
-        </div>
-    );
+function Dashboard(props) {
+  return (
+    <div className="card">
+      <h2>Welcome, {props.user ? props.user.name : ""}</h2>
+      <p className="muted">Apni profile complete karo taake teammates tumhe dhoondh sakein.</p>
+      <Link to="/profile">Edit my profile</Link>
+    </div>
+  );
 }
 
 export default Dashboard;

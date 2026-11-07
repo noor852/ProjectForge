@@ -1,104 +1,196 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchMyProfile, saveProfile, clearSaved } from "../features/profileSlice";
+import { request } from "../api";
+import SkillRow from "../components/SkillRow";
 
-const toList = (str) => str.split(",").map((x) => x.trim()).filter(Boolean);
+function toList(text) {
+  return text.split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+}
 
-export default function ProfilePage() {
-  const dispatch = useDispatch();
-  const { me, loading, saving, error, saved } = useSelector((s) => s.profile);
-
+function ProfilePage() {
   const [form, setForm] = useState({
-    name: "", bio: "", experience: "beginner", availability: 10,
-    roles: "", technologies: "", interests: "", skills: [],
+    name: "",
+    bio: "",
+    experience: "beginner",
+    availability: 10,
+    roles: "",
+    technologies: "",
+    interests: "",
+    skills: []
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => { dispatch(fetchMyProfile()); }, [dispatch]);
+  // server se profile lao aur form me daalo
+  useEffect(function () {
+    request("/api/users/me")
+      .then(function (data) {
+        const me = data.user;
+        setForm({
+          name: me.name || "",
+          bio: me.bio || "",
+          experience: me.experience || "beginner",
+          availability: me.availability ?? 10,
+          roles: (me.preferredRoles || []).join(", "),
+          technologies: (me.technologies || []).join(", "),
+          interests: (me.interests || []).join(", "),
+          skills: me.skills || []
+        });
+      })
+      .catch(function (err) {
+        setError(err.message);
+      })
+      .finally(function () {
+        setLoading(false);
+      });
+  }, []);
 
-  // copy server data into the form once it arrives
-  useEffect(() => {
-    if (!me) return;
+  // har simple input yahi function use karta hai (input ke name se pata chalta hai kaunsi field hai)
+  function handleChange(e) {
+    setSaved(false);
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  function addSkill() {
+    setForm({ ...form, skills: [...form.skills, { name: "", level: 3 }] });
+  }
+
+  function removeSkill(index) {
     setForm({
-      name: me.name || "",
-      bio: me.bio || "",
-      experience: me.experience || "beginner",
-      availability: me.availability ?? 10,
-      roles: (me.preferredRoles || []).join(", "),
-      technologies: (me.technologies || []).join(", "),
-      interests: (me.interests || []).join(", "),
-      skills: me.skills || [],
+      ...form,
+      skills: form.skills.filter(function (s, i) { return i !== index; })
     });
-  }, [me]);
+  }
 
-  const set = (k) => (e) => { dispatch(clearSaved()); setForm({ ...form, [k]: e.target.value }); };
+  function changeSkill(index, field, value) {
+    const newSkills = form.skills.map(function (s, i) {
+      if (i === index) {
+        return { ...s, [field]: value };
+      }
+      return s;
+    });
+    setForm({ ...form, skills: newSkills });
+  }
 
-  const addSkill = () => setForm({ ...form, skills: [...form.skills, { name: "", level: 3 }] });
-  const removeSkill = (i) => setForm({ ...form, skills: form.skills.filter((_, idx) => idx !== i) });
-  const updateSkill = (i, field, value) =>
-    setForm({ ...form, skills: form.skills.map((s, idx) => (idx === i ? { ...s, [field]: value } : s)) });
-
-  const handleSubmit = (e) => {
+    async function handleSubmit(e) {
     e.preventDefault();
-    dispatch(saveProfile({
-      name: form.name,
-      bio: form.bio,
-      experience: form.experience,
-      availability: form.availability,
-      preferredRoles: toList(form.roles),
-      technologies: toList(form.technologies),
-      interests: toList(form.interests),
-      skills: form.skills,
-    }));
-  };
+    setError("");
+    setSaved(false);
+    setSaving(true);
 
-  if (loading && !me) return <p>Loading...</p>;
+    // khali naam wali skill rows save na hon
+    const cleanSkills = form.skills.filter(function (s) {
+      return s.name.trim() !== "";
+    });
+
+    try {
+      await request("/api/users/me", "PUT", {
+        name: form.name,
+        bio: form.bio,
+        experience: form.experience,
+        availability: Number(form.availability),
+        preferredRoles: toList(form.roles),
+        technologies: toList(form.technologies),
+        interests: toList(form.interests),
+        skills: cleanSkills
+      });
+      setSaved(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="card form" onSubmit={handleSubmit}>
       <h2>My Profile</h2>
 
-      <label>Name <input value={form.name} onChange={set("name")} /></label>
-      <label>Bio <textarea maxLength={300} value={form.bio} onChange={set("bio")} /></label>
+      <label>
+        Name
+        <input name="name" value={form.name} onChange={handleChange} />
+      </label>
 
-      <label>Experience
-        <select value={form.experience} onChange={set("experience")}>
+      <label>
+        Bio
+        <textarea name="bio" maxLength={300} value={form.bio} onChange={handleChange} />
+      </label>
+
+      <label>
+        Experience
+        <select name="experience" value={form.experience} onChange={handleChange}>
           <option value="beginner">Beginner</option>
           <option value="intermediate">Intermediate</option>
           <option value="advanced">Advanced</option>
         </select>
       </label>
 
-      <label>Availability (hrs/week)
-        <input type="number" min="0" max="40" value={form.availability} onChange={set("availability")} />
+      <label>
+        Availability (hrs/week)
+        <input
+          type="number"
+          name="availability"
+          min="0"
+          max="40"
+          value={form.availability}
+          onChange={handleChange}
+        />
       </label>
 
-      <label>Preferred roles (comma separated)
-        <input placeholder="frontend, backend" value={form.roles} onChange={set("roles")} />
+      <label>
+        Preferred roles (comma separated)
+        <input
+          name="roles"
+          placeholder="frontend, backend"
+          value={form.roles}
+          onChange={handleChange}
+        />
       </label>
-      <label>Technologies
-        <input placeholder="react, node, mongodb" value={form.technologies} onChange={set("technologies")} />
+
+      <label>
+        Technologies
+        <input
+          name="technologies"
+          placeholder="react, node, mongodb"
+          value={form.technologies}
+          onChange={handleChange}
+        />
       </label>
-      <label>Interests
-        <input placeholder="ai, web, security" value={form.interests} onChange={set("interests")} />
+
+      <label>
+        Interests
+        <input
+          name="interests"
+          placeholder="ai, web, security"
+          value={form.interests}
+          onChange={handleChange}
+        />
       </label>
 
       <h3>Skills</h3>
-      {form.skills.map((s, i) => (
-        <div key={i}>
-          <input placeholder="skill (e.g. react)" value={s.name}
-            onChange={(e) => updateSkill(i, "name", e.target.value)} />
-          <select value={s.level} onChange={(e) => updateSkill(i, "level", Number(e.target.value))}>
-            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
-          <button type="button" onClick={() => removeSkill(i)}>Remove</button>
-        </div>
-      ))}
-      <button type="button" onClick={addSkill}>+ Add skill</button>
+      {form.skills.map(function (s, i) {
+        return (
+          <SkillRow
+            key={i}
+            skill={s}
+            index={i}
+            onChange={changeSkill}
+            onRemove={removeSkill}
+          />
+        );
+      })}
+      <button type="button" className="btn-outline" onClick={addSkill}>+ Add skill</button>
 
-      <br />
       <button disabled={saving}>{saving ? "Saving..." : "Save profile"}</button>
-      {saved && <p style={{ color: "limegreen" }}>Profile saved</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {saved && <p className="success">Profile saved</p>}
+      {error && <p className="error">{error}</p>}
     </form>
   );
 }
+
+export default ProfilePage;
