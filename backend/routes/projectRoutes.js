@@ -9,6 +9,11 @@ const {
   getCandidates
 } = require("../controller/projectController");
 
+const { getProjects, getProjectDetail, getTeamCandidates } = require("../controller/discoveryController");
+
+router.get("/", auth, getProjects);   
+router.get("/:id/detail", auth, getProjectDetail);  
+router.get("/:id/team-candidates", auth, getTeamCandidates); 
 router.post("/", auth, createProject);
 router.get("/mine", auth, getMyProjects);   // /:id se pehle
 router.get("/:id", auth, getProject);

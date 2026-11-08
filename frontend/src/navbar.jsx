@@ -13,11 +13,13 @@ function Navbar() {
         <>
           <Link to="/profile">Profile</Link>
           <button onClick={() => dispatch(logout())}>Logout</button>
+          <Link to="/discover">Discover</Link>
         </>
       ) : (
         <>
           <Link to="/register">Register</Link>
           <Link to="/login">Login</Link>
+          
         </>
       )}
     </nav>

@@ -3,14 +3,18 @@ import { Routes, Route } from "react-router-dom";
 import { request } from "./api";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Login from "./pages/login";
+import Register from "./pages/register";
 import Dashboard from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
 import StudentProfile from "./pages/StudentProfile";
 import MyProjects from "./pages/MyProjects";
 import ProjectForm from "./pages/ProjectForm";
 import FindTeammates from "./pages/FindTeammates";
+import Discover from "./pages/Discover";
+import ProjectDetail from "./pages/ProjectDetail";
+import TeamMatch from "./pages/TeamMatch";
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
@@ -109,6 +113,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/discover" element={<ProtectedRoute token={token} checking={checking}><Discover /></ProtectedRoute>} />
+          <Route path="/project/:id" element={<ProtectedRoute token={token} checking={checking}><ProjectDetail /></ProtectedRoute>} />
+          <Route path="/project/:id/team-match" element={<ProtectedRoute token={token} checking={checking}><TeamMatch /></ProtectedRoute>} />
         </Routes>
       </div>
     </div>

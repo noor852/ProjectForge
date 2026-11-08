@@ -8,8 +8,11 @@ function Navbar(props) {
         {props.token ? (
           <>
             <Link to="/projects">My Projects</Link>
+            <Link to="/discover">Discover</Link>
             <Link to="/profile">My Profile</Link>
+            
             <button className="btn-outline" onClick={props.onLogout}>Logout</button>
+            
           </>
         ) : (
           <>
