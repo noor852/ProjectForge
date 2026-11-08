@@ -347,3 +347,23 @@ coverage-row {
 [data-theme="dark"] .card {
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
 }
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  text-transform: capitalize;
+}
+
+.badge-pending {
+  background: #f59e0b;
+}
+
+.badge-accepted {
+  background: var(--success);
+}
+
+.badge-declined {
+  background: var(--danger);
+}

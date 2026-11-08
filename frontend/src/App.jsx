@@ -14,6 +14,7 @@ import FindTeammates from "./pages/FindTeammates";
 import Discover from "./pages/Discover";
 import ProjectDetail from "./pages/ProjectDetail";
 import TeamMatch from "./pages/TeamMatch";
+import Invitations from "./pages/Invitations";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -116,6 +117,14 @@ function App() {
           <Route path="/discover" element={<ProtectedRoute token={token} checking={checking}><Discover /></ProtectedRoute>} />
           <Route path="/project/:id" element={<ProtectedRoute token={token} checking={checking}><ProjectDetail /></ProtectedRoute>} />
           <Route path="/project/:id/team-match" element={<ProtectedRoute token={token} checking={checking}><TeamMatch /></ProtectedRoute>} />
+                    <Route
+            path="/invitations"
+            element={
+              <ProtectedRoute token={token} checking={checking}>
+                <Invitations />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </div>

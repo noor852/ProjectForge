@@ -10,6 +10,7 @@ function FindTeammates() {
   const [experience, setExperience] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [invitedIds, setInvitedIds] = useState([]);
 
   async function loadCandidates() {
     setLoading(true);
@@ -36,7 +37,23 @@ function FindTeammates() {
     e.preventDefault();
     loadCandidates();
   }
-
+  async function handleInvite(candidateId) {
+    const role = window.prompt("Which role is this person invited for? (e.g. frontend)");
+    if (role === null) {
+      return;
+    }
+    setError("");
+    try {
+      await request("/api/invitations", "POST", {
+        projectId: id,
+        studentId: candidateId,
+        role: role
+      });
+      setInvitedIds([...invitedIds, candidateId]);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
   function scoreClass(score) {
     if (score >= 70) {
       return "score score-high";
@@ -100,6 +117,16 @@ function FindTeammates() {
             )}
             <div className="project-actions">
               <Link to={"/student/" + c._id} className="link-btn">View Profile</Link>
+                            {invitedIds.indexOf(c._id) !== -1 ? (
+                <span className="badge badge-pending">Invited</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={function () { handleInvite(c._id); }}
+                >
+                  Invite
+                </button>
+              )}
             </div>
           </div>
         );
