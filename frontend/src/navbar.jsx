@@ -14,6 +14,7 @@ function Navbar() {
           <Link to="/profile">Profile</Link>
           <button onClick={() => dispatch(logout())}>Logout</button>
           <Link to="/discover">Discover</Link>
+          
         </>
       ) : (
         <>

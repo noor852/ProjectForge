@@ -10,6 +10,10 @@ function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [isMember, setIsMember] = useState(false);
+  const [pendingType, setPendingType] = useState(null);
+  const [msg, setMsg] = useState("");
+
   useEffect(function () {
     setLoading(true);
     setError("");
@@ -17,6 +21,8 @@ function ProjectDetail() {
       .then(function (data) {
         setProject(data.project);
         setIsOwner(data.isOwner);
+        setIsMember(data.isMember);
+        setPendingType(data.pendingType);
       })
       .catch(function (err) {
         setError(err.message);
@@ -25,6 +31,20 @@ function ProjectDetail() {
         setLoading(false);
       });
   }, [id]);
+
+
+  function handleJoin() 
+  {
+    setMsg("");
+    request("/api/requests", "POST", { projectId: id, type: "request" })
+      .then(function () {
+        setPendingType("request");
+        setMsg("Request sent!");
+      })
+      .catch(function (err) {
+        setMsg(err.message);
+      });
+  }
 
   if (loading) {
     return <p>Loading...</p>;
@@ -83,6 +103,19 @@ function ProjectDetail() {
             </Link>
           </div>
         )}
+
+        {!isOwner && !isMember && pendingType === null &&
+          (project.status === "looking" || project.status === "forming") && (
+          <div className="project-actions">
+            <button onClick={handleJoin}>Request to join</button>
+          </div>
+        )}
+        {pendingType === "request" && <p className="muted">Your request is pending.</p>}
+        {pendingType === "invite" && (
+          <p className="success">You were invited! Answer it in <Link to="/requests">Requests</Link>.</p>
+        )}
+        {isMember && <p className="success">You are on this team.</p>}
+        {msg && <p className="muted">{msg}</p>}
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ function Navbar(props) {
             <Link to="/projects">My Projects</Link>
             <Link to="/discover">Discover</Link>
             <Link to="/invitations">Invitations</Link>
+            <Link to="/requests">Requests</Link>
             <Link to="/profile">My Profile</Link>
             {props.user && <span className="nav-user">Hi, {props.user.name}</span>}
             <button className="btn-outline" onClick={props.onLogout}>Logout</button>

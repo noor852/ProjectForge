@@ -9,6 +9,8 @@ function TeamMatch() {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [invited, setInvited] = useState({});
+  const [inviteMsg, setInviteMsg] = useState("");
 
   useEffect(function () {
     request("/api/projects/" + id + "/team-candidates")
@@ -25,6 +27,17 @@ function TeamMatch() {
       });
   }, [id]);
 
+
+  function handleInvite(studentId) {
+    setInviteMsg("");
+    request("/api/requests", "POST", { projectId: id, type: "invite", studentId: studentId })
+      .then(function () {
+        setInvited(function (prev) { return { ...prev, [studentId]: true }; });
+      })
+      .catch(function (err) {
+        setInviteMsg(err.message);
+      });
+  }
   function scoreClass(score) {
     if (score >= 70) {
       return "score score-high";
@@ -53,6 +66,8 @@ function TeamMatch() {
         <h2>Team-aware suggestions: {project.title}</h2>
         <Link to={"/project/" + id} className="link-btn">Back</Link>
       </div>
+
+      {inviteMsg && <p className="error">{inviteMsg}</p>}
 
       <div className="card">
         <h3>Team skill coverage ({project.teamCount}/{project.teamSize} members)</h3>
@@ -100,6 +115,9 @@ function TeamMatch() {
             )}
             <div className="project-actions">
               <Link to={"/student/" + c._id} className="link-btn">View Profile</Link>
+              <button disabled={invited[c._id]} onClick={function () { handleInvite(c._id); }}>
+                {invited[c._id] ? "Invited" : "Invite"}
+              </button>
             </div>
           </div>
         );
