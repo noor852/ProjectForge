@@ -1,5 +1,6 @@
 const Project = require("../models/Projects");
 const User = require("../models/User");
+const Request = require("../models/Request");
 const { teamCoverage, teamAwareScore } = require("../utils/teamMatching");
 
 const PAGE_SIZE = 6;
@@ -15,11 +16,10 @@ function safeRegex(text) {
 async function getProjects(req, res) {
   try {
     const { search, domain, skills, status } = req.query;
-    // for safer paging and no crashing
     const page = Math.max(Number(req.query.page) || 1, 1);
 
     const filter = {};
-    filter.status = status ? status : { $ne: "draft" };    
+    filter.status = status ? status : { $ne: "draft" };    // drafts stay private
     if (domain) {
       filter.domain = safeRegex(domain);
     }
@@ -52,15 +52,65 @@ async function getProjects(req, res) {
 async function getProjectDetail(req, res) {
   try {
     const project = await Project.findById(req.params.id)
-      .populate("owner", "name")
-      .populate("members.user", "name");
+      .populate("owner", "name skills")
+      .populate("members.user", "name skills");
     if (!project) {
       return res.status(404).json({ message: "Project not found!" });
     }
-    const isOwner = project.owner._id.toString() === req.user._id.toString();
-    res.json({ project: project, isOwner: isOwner });
+
+    const me = req.user._id.toString();
+    const isOwner = project.owner._id.toString() === me;
+
+    let isMember = false;
+    const team = [project.owner];                 
+    for (let i = 0; i < project.members.length; i++) {
+      team.push(project.members[i].user);
+      if (project.members[i].user._id.toString() === me) {
+        isMember = true;
+      }
+    }
+
+    
+    const coverage = teamCoverage(project, team);
+
+    let openSpots = project.teamSize - team.length;
+    if (openSpots < 0) {
+      openSpots = 0;
+    }
+
+    
+    const pending = await Request.findOne({
+      project: project._id,
+      student: req.user._id,
+      status: "pending"
+    });
+
+    res.json({
+      project: project,
+      isOwner: isOwner,
+      isMember: isMember,
+      meId: me,
+      pendingType: pending ? pending.type : null,
+      coverage: coverage,
+      openSpots: openSpots
+    });
   } catch (err) {
     res.status(404).json({ message: "Project not found!" });
+  }
+}
+
+
+async function getStudentProjects(req, res) {
+  try {
+    const id = req.params.id;
+    const owned = await Project.find({ owner: id, status: { $ne: "draft" } })
+      .select("title status");
+    const joined = await Project.find({ "members.user": id, status: { $ne: "draft" } })
+      .select("title status owner")
+      .populate("owner", "name");
+    res.json({ owned: owned, joined: joined });
+  } catch (err) {
+    res.status(404).json({ message: "Student not found!" });
   }
 }
 
@@ -126,4 +176,4 @@ async function getTeamCandidates(req, res) {
   }
 }
 
-module.exports = { getProjects, getProjectDetail, getTeamCandidates };
+module.exports = { getProjects, getProjectDetail, getStudentProjects, getTeamCandidates };

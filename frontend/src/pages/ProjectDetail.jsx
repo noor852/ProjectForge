@@ -2,17 +2,16 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { request } from "../api";
 
-// one project's full page with the loading nad error stats
+// there's feature 4: one project's full page and then feature 10: request to join combined here
 function ProjectDetail() {
   const { id } = useParams();
   const [project, setProject] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
   const [isMember, setIsMember] = useState(false);
   const [pendingType, setPendingType] = useState(null);
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(function () {
     setLoading(true);
@@ -32,9 +31,7 @@ function ProjectDetail() {
       });
   }, [id]);
 
-
-  function handleJoin() 
-  {
+  function handleJoin() {
     setMsg("");
     request("/api/requests", "POST", { projectId: id, type: "request" })
       .then(function () {
@@ -55,6 +52,8 @@ function ProjectDetail() {
   if (!project) {
     return null;
   }
+
+  const acceptingMembers = project.status === "looking" || project.status === "forming";
 
   return (
     <div>
@@ -104,15 +103,20 @@ function ProjectDetail() {
           </div>
         )}
 
-        {!isOwner && !isMember && pendingType === null &&
-          (project.status === "looking" || project.status === "forming") && (
+        {/* Feature 10: join request */}
+        {!isOwner && !isMember && !pendingType && acceptingMembers && (
           <div className="project-actions">
             <button onClick={handleJoin}>Request to join</button>
           </div>
         )}
+        {!isOwner && !isMember && !acceptingMembers && (
+          <p className="muted">This project is not accepting members.</p>
+        )}
         {pendingType === "request" && <p className="muted">Your request is pending.</p>}
         {pendingType === "invite" && (
-          <p className="success">You were invited! Answer it in <Link to="/requests">Requests</Link>.</p>
+          <p className="success">
+            You were invited! Answer it in <Link to="/requests">Requests</Link>.
+          </p>
         )}
         {isMember && <p className="success">You are on this team.</p>}
         {msg && <p className="muted">{msg}</p>}
