@@ -295,7 +295,7 @@ button:disabled {
   background: var(--danger);
 }
 
-coverage-row {
+.coverage-row {
   display: flex;
   align-items: center;
   gap: 12px;

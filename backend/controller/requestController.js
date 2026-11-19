@@ -1,20 +1,9 @@
 const Request = require("../models/Request");
 const Project = require("../models/Projects");
 const User = require("../models/User");
-const updateStatus = require("../utils/teamStatus");
+const { isInTeam, addMemberToTeam } = require("./teamController");
 
-function isInTeam(project, userId) {
-  if (project.owner.toString() === userId.toString()) {
-    return true;
-  }
-  for (let i = 0; i < project.members.length; i++) {
-    if (project.members[i].user.toString() === userId.toString()) {
-      return true;
-    }
-  }
-  return false;
-}
-
+// ---------- Feature 10: send a join request or an invitation ----------
 // body: { projectId, type: "request" | "invite", studentId (only for invite) }
 async function sendRequest(req, res) {
   try {
@@ -70,7 +59,8 @@ async function sendRequest(req, res) {
   }
 }
 
-// received = waiting for an answer, sent = things I started
+// ---------- Feature 10: my inbox ----------
+// received = waiting for MY answer, sent = things I started
 async function getMyRequests(req, res) {
   try {
     const myProjects = await Project.find({ owner: req.user._id }).select("_id");
@@ -103,6 +93,7 @@ async function getMyRequests(req, res) {
   }
 }
 
+// ---------- Feature 10: accept or decline ----------
 // body: { action: "accept" | "decline" }
 async function respondToRequest(req, res) {
   try {
@@ -115,7 +106,7 @@ async function respondToRequest(req, res) {
       return res.status(400).json({ message: "This request was already answered." });
     }
 
-    // who is being allowed to answer - should be either me (the owner) or the student i invite
+    // who is allowed to answer?
     const me = req.user._id.toString();
     const project = request.project;
     let allowed = false;
@@ -138,25 +129,16 @@ async function respondToRequest(req, res) {
       return res.status(400).json({ message: "Action must be accept or decline." });
     }
 
-    // accept: re-check, because things may have changed since the request was sent
-    if (project.status !== "looking" && project.status !== "forming") {
-      return res.status(400).json({ message: "This project is not accepting members." });
-    }
-    if (project.members.length + 1 >= project.teamSize) {
-      return res.status(400).json({ message: "The team is already full." });
-    }
-    if (isInTeam(project, request.student)) {
-      return res.status(400).json({ message: "This student is already in the team." });
-    }
-
-    // add to the team (feature 11 manages the team from here)
+    // accept: feature 11 creates the membership (and checks the team size limit)
     const student = await User.findById(request.student);
     let role = "member";
     if (student.preferredRoles.length > 0) {
-      role = student.preferredRoles[0];
+      role = student.preferredRoles[0];          // owner can change it later (feature 11)
     }
-    project.members.push({ user: student._id, role: role });
-    updateStatus(project);
+    const problem = addMemberToTeam(project, student._id, role);
+    if (problem) {
+      return res.status(400).json({ message: problem });
+    }
     await project.save();
 
     request.status = "accepted";
@@ -176,7 +158,7 @@ async function respondToRequest(req, res) {
   }
 }
 
-// to delete a request if i want
+// ---------- Feature 10: cancel something I sent ----------
 async function cancelRequest(req, res) {
   try {
     const request = await Request.findById(req.params.id).populate("project");

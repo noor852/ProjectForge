@@ -2,26 +2,26 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { request } from "../api";
 
-// there's feature 4: one project's full page and then feature 10: request to join combined here
+// Feature 4: one project's full page  |  Feature 10: request to join  |  Feature 11: remove / leave
 function ProjectDetail() {
   const { id } = useParams();
   const [project, setProject] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [pendingType, setPendingType] = useState(null);
+  const [meId, setMeId] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(function () {
-    setLoading(true);
-    setError("");
-    request("/api/projects/" + id + "/detail")
+  function loadProject() {
+    return request("/api/projects/" + id + "/detail")
       .then(function (data) {
         setProject(data.project);
         setIsOwner(data.isOwner);
         setIsMember(data.isMember);
         setPendingType(data.pendingType);
+        setMeId(data.meId);
       })
       .catch(function (err) {
         setError(err.message);
@@ -29,7 +29,27 @@ function ProjectDetail() {
       .finally(function () {
         setLoading(false);
       });
+  }
+
+  useEffect(function () {
+    setLoading(true);
+    setError("");
+    loadProject();
   }, [id]);
+
+  // Feature 11: owner removes a member, or a member leaves
+  function handleRemove(userId, isSelf) {
+    const question = isSelf ? "Leave this team?" : "Remove this member?";
+    if (!window.confirm(question)) {
+      return;
+    }
+    setMsg("");
+    request("/api/projects/" + id + "/members/" + userId, "DELETE")
+      .then(loadProject)
+      .catch(function (err) {
+        setMsg(err.message);
+      });
+  }
 
   function handleJoin() {
     setMsg("");
@@ -86,10 +106,20 @@ function ProjectDetail() {
             <Link to={"/student/" + project.owner._id}>{project.owner.name}</Link> (owner)
           </li>
           {project.members.map(function (m) {
+            const isSelf = m.user._id === meId;
             return (
               <li key={m.user._id}>
                 <Link to={"/student/" + m.user._id}>{m.user.name}</Link>
-                {m.role ? " (" + m.role + ")" : ""}
+                {m.role ? " (" + m.role + ")" : ""}{" "}
+                {(isOwner || isSelf) && (
+                  <button
+                    type="button"
+                    className="btn-outline"
+                    onClick={function () { handleRemove(m.user._id, isSelf); }}
+                  >
+                    {isSelf ? "Leave" : "Remove"}
+                  </button>
+                )}
               </li>
             );
           })}
