@@ -67,7 +67,7 @@ function MyProjects() {
             )}
             <div className="project-actions">
               <Link to={"/projects/" + p._id + "/find"} className="link-btn">Find Teammates</Link>
-              <Link to={"/projects/" + p._id + "/edit"} className="link-btn">Edit</Link>
+              <Link to={"/projects/" + p._id + "/team-match"} className="link-btn"> Team-aware suggestions</Link>
               <button
                 type="button"
                 className="btn-danger"

@@ -367,3 +367,60 @@ button:disabled {
 .badge-declined {
   background: var(--danger);
 }
+
+.coverage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.coverage-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 130px;
+}
+
+.coverage-stats {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+.gap-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.gap-item p {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.badge-covered {
+  background: var(--success);
+}
+
+.badge-partial {
+  background: #f59e0b;
+}
+
+.badge-missing {
+  background: var(--danger);
+}
+
+.badge-high {
+  background: var(--danger);
+}
+
+.badge-medium {
+  background: #f59e0b;
+}

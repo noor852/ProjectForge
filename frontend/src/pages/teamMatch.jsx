@@ -12,12 +12,17 @@ function TeamMatch() {
   const [invited, setInvited] = useState({});
   const [inviteMsg, setInviteMsg] = useState("");
 
+  const [summary, setSummary] = useState(null);
+  const [gaps, setGaps] = useState([]);
+
   useEffect(function () {
     request("/api/projects/" + id + "/team-candidates")
       .then(function (data) {
         setProject(data.project);
         setCoverage(data.coverage);
         setCandidates(data.candidates);
+        setSummary(data.summary);
+        setGaps(data.gaps);
       })
       .catch(function (err) {
         setError(err.message);
@@ -69,23 +74,112 @@ function TeamMatch() {
 
       {inviteMsg && <p className="error">{inviteMsg}</p>}
 
+
+      {summary && (
+        <div className="card">
+          <h3>Overall Team Skill Coverage</h3>
+
+          <h2>{summary.overallCoverage}%</h2>
+
+          <div className="bar">
+            <div
+              className="bar-fill bar-covered"
+              style={{
+                width: summary.overallCoverage + "%"
+              }}
+            ></div>
+          </div>
+
+          <div className="coverage-stats">
+            <span>Covered: {summary.covered}</span>
+            <span>Partial: {summary.partial}</span>
+            <span>Missing: {summary.missing}</span>
+            <span>Total: {summary.total}</span>
+          </div>
+
+          {summary.essentialGaps > 0 && (
+            <p className="error">
+              {summary.essentialGaps} essential skill gap(s) need attention.
+            </p>
+          )}
+
+          {summary.essentialGaps === 0 && (
+            <p className="success">
+              All essential skills are covered!
+            </p>
+          )}
+        </div>
+      )}
       <div className="card">
         <h3>Team skill coverage ({project.teamCount}/{project.teamSize} members)</h3>
         {coverage.length === 0 && <p className="muted">This project has no required skills yet.</p>}
         {coverage.map(function (c) {
           return (
             <div key={c.name} className="coverage-row">
-              <span className="coverage-name">{c.name} ({c.importance})</span>
+              <div className="coverage-info">
+                <b>{c.name}</b>
+
+                <span className="muted">
+                  {c.importance} | Required: {c.minLevel}/5
+                </span>
+              </div>
+
               <div className="bar">
                 <div
                   className={"bar-fill bar-" + c.status}
-                  style={{ width: Math.round(c.coverage * 100) + "%" }}
+                  style={{ width: c.percentage + "%" }}
                 ></div>
               </div>
-              <span className="muted">{c.status}</span>
+
+              <span className="muted">
+                {c.best}/5 ({c.percentage}%)
+              </span>
+
+              <span className={"badge badge-" + c.status}>
+                {c.status}
+              </span>
+
+              {c.priority !== "none" && (
+                <span className={"badge badge-" + c.priority}>
+                  {c.priority} priority
+                </span>
+              )}
             </div>
           );
         })}
+
+        <div className="card">
+          <h3>Detected Skill Gaps</h3>
+
+          {gaps.length === 0 ? (
+            <p className="success">
+              No skill gaps detected. Your team covers all required skills!
+            </p>
+          ) : (
+            gaps.map(function (g) {
+              return (
+                <div key={g.name} className="gap-item">
+                  <div>
+                    <b>{g.name}</b>
+                    <p className="muted">
+                      {g.status === "missing"
+                        ? "No team member has this skill."
+                        : "Team proficiency is below the required level."}
+                    </p>
+                  </div>
+
+                  <span className={
+                    g.priority === "high"
+                      ? "badge badge-high"
+                      : "badge badge-medium"
+                  }>
+                    {g.priority} priority
+                  </span>
+                </div>
+              );
+            })
+          )}
+</div>
       </div>
 
       <h3>Suggested teammates</h3>

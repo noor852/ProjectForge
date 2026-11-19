@@ -10,7 +10,7 @@ const {
 } = require("../controller/projectController");
 
 const { getProjects, getProjectDetail, getTeamCandidates } = require("../controller/discoveryController");
-const { removeMember } = require("../controller/teamController");
+const { removeMember, updateRole } = require("../controller/teamController");
 
 router.get("/", auth, getProjects);   
 router.delete("/:id/members/:userId", auth, removeMember);

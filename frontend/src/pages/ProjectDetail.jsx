@@ -91,7 +91,10 @@ function ProjectDetail() {
         <p><b>Technologies:</b> {project.technologies.join(", ") || "none"}</p>
         {project.rolesNeeded && project.rolesNeeded.length > 0 && (
           <p><b>Roles needed:</b> {project.rolesNeeded.join(", ")}</p>
+          
         )}
+
+
 
         <h3>Required skills</h3>
         <ul>
