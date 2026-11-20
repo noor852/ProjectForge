@@ -497,3 +497,140 @@ button:disabled {
   border-radius: 10px;
   transition: width 0.4s ease;
 }
+
+/* Project Details */
+
+.project-detail-card h3 {
+  margin-top: 26px;
+  margin-bottom: 14px;
+}
+
+.project-overview {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.project-overview p {
+  line-height: 1.8;
+}
+
+.project-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 12px 0;
+}
+
+.tech-tag,
+.role-tag {
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tech-tag {
+  background: rgba(139, 92, 246, 0.13);
+  color: var(--primary);
+}
+
+.role-tag {
+  background: rgba(236, 72, 153, 0.12);
+  color: var(--pink);
+}
+
+.project-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.project-skill-card {
+  padding: 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.project-skill-card .badge {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.badge-essential {
+  background: var(--danger);
+}
+
+.badge-secondary {
+  background: #f59e0b;
+}
+
+.project-team {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-member {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--input-bg);
+}
+
+.member-avatar {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: white;
+  font-weight: 700;
+  font-size: 17px;
+  background: linear-gradient(135deg, var(--primary), var(--pink));
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.member-info span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.member-label {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.team-member button {
+  padding: 7px 11px;
+  font-size: 12px;
+}
+
+@media (max-width: 480px) {
+  .team-member {
+    flex-wrap: wrap;
+  }
+
+  .team-member button {
+    margin-left: auto;
+  }
+}

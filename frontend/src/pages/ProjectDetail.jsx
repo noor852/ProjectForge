@@ -73,6 +73,10 @@ function ProjectDetail() {
     return null;
   }
 
+  const teamCount = project.members.length + 1;
+  const requiredSkills = project.requiredSkills || [];
+  const technologies = project.technologies || [];
+  const rolesNeeded = project.rolesNeeded || [];
   const acceptingMembers = project.status === "looking" || project.status === "forming";
 
   return (
@@ -82,52 +86,147 @@ function ProjectDetail() {
         <Link to="/discover" className="link-btn">Back</Link>
       </div>
 
-      <div className="card">
-        <p>{project.description}</p>
-        <p className="muted">
-          {project.domain ? project.domain + " | " : ""}
-          Status: {project.status.replace("_", " ")} | Team size: {project.teamSize}
-        </p>
-        <p><b>Technologies:</b> {project.technologies.join(", ") || "none"}</p>
-        {project.rolesNeeded && project.rolesNeeded.length > 0 && (
-          <p><b>Roles needed:</b> {project.rolesNeeded.join(", ")}</p>
-          
+      <div className="card project-detail-card">
+
+        {/* Description */}
+        <div className="project-overview">
+          <div className="project-status">
+            <span className={"badge badge-" + project.status}>
+              {project.status.replace("_", " ")}
+            </span>
+            <span className="muted">{project.domain}</span>
+          </div>
+
+          <p>{project.description}</p>
+        </div>
+
+        {/* Project Stats */}
+        <div className="profile-stats">
+          <div className="stat-card">
+            <h3>{teamCount}/{project.teamSize}</h3>
+            <p>Team Members</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>{requiredSkills.length}</h3>
+            <p>Required Skills</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>{technologies.length}</h3>
+            <p>Technologies</p>
+          </div>
+        </div>
+
+        {/* Technologies */}
+        <h3>Technologies</h3>
+        <div className="tag-list">
+          {technologies.length > 0 ? (
+            technologies.map(function (tech) {
+              return <span className="tech-tag" key={tech}>{tech}</span>;
+            })
+          ) : (
+            <p className="muted">No technologies specified.</p>
+          )}
+        </div>
+
+        {/* Roles Needed */}
+        <h3>Looking For</h3>
+        <div className="tag-list">
+          {rolesNeeded.length > 0 ? (
+            rolesNeeded.map(function (role) {
+              return <span className="role-tag" key={role}>{role}</span>;
+            })
+          ) : (
+            <p className="muted">No specific roles listed.</p>
+          )}
+        </div>
+
+        {/* Required Skills */}
+        <h3>Required Skills</h3>
+
+        {requiredSkills.length === 0 ? (
+          <p className="muted">No required skills specified.</p>
+        ) : (
+          <div className="project-skills">
+            {requiredSkills.map(function (skill) {
+              return (
+                <div className="project-skill-card" key={skill.name}>
+                  <div className="skill-info">
+                    <strong>{skill.name}</strong>
+                    <span>{skill.minLevel}/5</span>
+                  </div>
+
+                  <div className="skill-bar">
+                    <div
+                      className="skill-progress"
+                      style={{ width: (skill.minLevel / 5) * 100 + "%" }}
+                    ></div>
+                  </div>
+
+                  <span className={"badge badge-" + skill.importance}>
+                    {skill.importance}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         )}
 
-        
+        {/* Team */}
+        <h3>Project Team ({teamCount}/{project.teamSize})</h3>
 
-        <h3>Required skills</h3>
-        <ul>
-          {project.requiredSkills.map(function (s) {
-            return <li key={s.name}>{s.name}: level {s.minLevel}+ ({s.importance})</li>;
-          })}
-        </ul>
+        <div className="project-team">
+          <div className="team-member">
+            <div className="member-avatar">
+              {project.owner.name.charAt(0).toUpperCase()}
+            </div>
 
-        <h3>Team ({project.members.length + 1}/{project.teamSize})</h3>
-        <ul>
-          <li>
-            <Link to={"/student/" + project.owner._id}>{project.owner.name}</Link> (owner)
-          </li>
+            <div className="member-info">
+              <Link to={"/student/" + project.owner._id}>
+                <strong>{project.owner.name}</strong>
+              </Link>
+              <span>Project Owner</span>
+            </div>
+
+            <span className="member-label">Owner</span>
+          </div>
+
           {project.members.map(function (m) {
             const isSelf = m.user._id === meId;
+
             return (
-              <li key={m.user._id}>
-                <Link to={"/student/" + m.user._id}>{m.user.name}</Link>
-                {m.role ? " (" + m.role + ")" : ""}{" "}
-                {(isOwner || isSelf) && (
+              <div className="team-member" key={m.user._id}>
+                <div className="member-avatar">
+                  {m.user.name.charAt(0).toUpperCase()}
+                </div>
+
+                <div className="member-info">
+                  <Link to={"/student/" + m.user._id}>
+                    <strong>{m.user.name}</strong>
+                  </Link>
+                  <span>{m.role || "Team Member"}</span>
+                </div>
+
+                {(isOwner || isSelf) ? (
                   <button
                     type="button"
                     className="btn-outline"
-                    onClick={function () { handleRemove(m.user._id, isSelf); }}
+                    onClick={function () {
+                      handleRemove(m.user._id, isSelf);
+                    }}
                   >
                     {isSelf ? "Leave" : "Remove"}
                   </button>
+                ) : (
+                  <span className="member-label">Member</span>
                 )}
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
 
+        {/* Existing Actions */}
         {isOwner && (
           <div className="project-actions">
             <Link to={"/project/" + project._id + "/team-match"} className="link-btn">
@@ -136,23 +235,30 @@ function ProjectDetail() {
           </div>
         )}
 
-        {/* Feature 10: join request */}
         {!isOwner && !isMember && !pendingType && acceptingMembers && (
           <div className="project-actions">
             <button onClick={handleJoin}>Request to join</button>
           </div>
         )}
+
         {!isOwner && !isMember && !acceptingMembers && (
           <p className="muted">This project is not accepting members.</p>
         )}
-        {pendingType === "request" && <p className="muted">Your request is pending.</p>}
+
+        {pendingType === "request" && (
+          <p className="muted">Your request is pending.</p>
+        )}
+
         {pendingType === "invite" && (
           <p className="success">
             You were invited! Answer it in <Link to="/requests">Requests</Link>.
           </p>
         )}
+
         {isMember && <p className="success">You are on this team.</p>}
+
         {msg && <p className="muted">{msg}</p>}
+
       </div>
     </div>
   );
