@@ -65,19 +65,50 @@ function MyProjects() {
                 }).join(", ")}
               </p>
             )}
-            <div className="project-actions">
-              <Link to={"/projects/" + p._id + "/find"} className="link-btn">Find Teammates</Link>
-              <Link to={"/projects/" + p._id + "/team-match"} className="link-btn"> Team-aware suggestions</Link>
-              <button
-                type="button"
-                className="btn-danger"
-                onClick={function () {
-                  handleDelete(p._id);
-                }}
-              >
-                Delete
-              </button>
-            </div>
+            
+
+          <div className="project-actions">
+
+            <Link
+              to={"/project/" + p._id}
+              className="link-btn"
+            >
+              Project Details
+            </Link>
+
+            <Link
+              to={"/project/" + p._id + "/team-match"}
+              className="link-btn"
+            >
+              Team-aware Suggestions
+            </Link>
+
+            <Link
+              to={"/projects/" + p._id + "/find"}
+              className="link-btn"
+            >
+              Find Teammates
+            </Link>
+
+            <Link
+              to={"/projects/" + p._id + "/edit"}
+              className="link-btn"
+            >
+              Edit
+            </Link>
+
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={function () {
+                handleDelete(p._id);
+              }}
+            >
+              Delete
+            </button>
+
+          </div>
+
           </div>
         );
       })}

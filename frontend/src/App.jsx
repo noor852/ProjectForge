@@ -13,7 +13,7 @@ import ProjectForm from "./pages/ProjectForm";
 import FindTeammates from "./pages/FindTeammates";
 import Discover from "./pages/Discover";
 import ProjectDetail from "./pages/ProjectDetail";
-import TeamMatch from "./pages/TeamMatch";
+import TeamMatch from "./pages/teamMatch";
 import Invitations from "./pages/Invitations";
 import Requests from "./pages/Requests";
 

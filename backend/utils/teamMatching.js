@@ -9,7 +9,6 @@ function levelOf(person, skillName) {
 
   for (let i = 0; i < person.skills.length; i++) {
     if (
-      // trim the name too to avoid any whitespace probs
       person.skills[i].name.trim().toLowerCase() ===
       skillName.trim().toLowerCase()
     ) {
@@ -124,7 +123,7 @@ function teamCoverage(project, team) {
 
 function teamAwareScore(project, student, coverageData) {
   const coverage = coverageData.skills;
-  const base = calcScore(project, student).score / 100;  
+  const base = calcScore(project, student).score / 100;
 
   let gapGot = 0;
   let gapTotal = 0;

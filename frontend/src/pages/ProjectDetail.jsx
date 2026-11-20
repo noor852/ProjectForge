@@ -20,8 +20,8 @@ function ProjectDetail() {
         setProject(data.project);
         setIsOwner(data.isOwner);
         setIsMember(data.isMember);
-        setPendingType(data.pendingType);
         setMeId(data.meId);
+        setPendingType(data.pendingType);
       })
       .catch(function (err) {
         setError(err.message);
@@ -94,7 +94,7 @@ function ProjectDetail() {
           
         )}
 
-
+        
 
         <h3>Required skills</h3>
         <ul>

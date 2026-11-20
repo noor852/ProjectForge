@@ -91,7 +91,9 @@ async function getProjectDetail(req, res) {
       isMember: isMember,
       meId: me,
       pendingType: pending ? pending.type : null,
-      coverage: coverage,
+      coverage: coverage.skills,
+      summary: coverage.summary,
+      gaps: coverage.gaps,
       openSpots: openSpots
     });
   } catch (err) {
@@ -167,17 +169,17 @@ async function getTeamCandidates(req, res) {
     });
 
     res.json({
-    project: {
-      _id: project._id,
-      title: project.title,
-      teamSize: project.teamSize,
-      teamCount: team.length
-    },
-    coverage: coverage.skills,
-    summary: coverage.summary,
-    gaps: coverage.gaps,
-    candidates: candidates.slice(0, 20)
-  });
+      project: {
+        _id: project._id,
+        title: project.title,
+        teamSize: project.teamSize,
+        teamCount: team.length
+      },
+      coverage: coverage.skills,
+      summary: coverage.summary,
+      gaps: coverage.gaps,
+      candidates: candidates.slice(0, 20)
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
