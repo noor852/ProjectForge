@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Project = require("../models/Projects");
 
 exports.getMe = function (req, res) {
   res.json({ user: req.user });
@@ -38,5 +39,23 @@ exports.updateMe = async function (req, res) {
     res.json({ user: user });
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+};
+
+exports.getStudentProjects = async function (req, res) {
+  try {
+    const projects = await Project.find({
+      $or: [
+        { owner: req.params.id },
+        { "members.user": req.params.id }
+      ]
+    })
+      .populate("owner", "name")
+      .populate("members.user", "name")
+      .sort({ createdAt: -1 });
+
+    res.json({ projects: projects });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

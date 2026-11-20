@@ -14,6 +14,10 @@
   --nav-bg: rgba(255, 255, 255, 0.7);
   --nav-border: rgba(255, 255, 255, 0.8);
   --bg: linear-gradient(135deg, #fce7f3 0%, #ede9fe 50%, #dbeafe 100%);
+  --stat-bg: #f3edff;
+  --stat-text: #3b3355;
+  --skill-track: #e4dcf7;
+  --skill-fill: #8b5cf6;
 }
 
 * {
@@ -342,6 +346,10 @@ button:disabled {
   --nav-bg: rgba(31, 27, 51, 0.8);
   --nav-border: rgba(255, 255, 255, 0.08);
   --bg: linear-gradient(135deg, #14101f 0%, #1a1530 50%, #101828 100%);
+  --stat-bg: #2a2542;
+  --stat-text: #ece9f7;
+  --skill-track: #3a3355;
+  --skill-fill: #a78bfa;
 }
 
 [data-theme="dark"] .card {
@@ -423,4 +431,69 @@ button:disabled {
 
 .badge-medium {
   background: #f59e0b;
+}
+
+/* Student Profile Stats */
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.stat-card {
+  background: var(--stat-bg);
+  color: var(--stat-text);
+  padding: 18px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid var(--border);
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+.stat-card h3 {
+  margin: 0;
+  font-size: 25px;
+  color: var(--primary);
+}
+
+.stat-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Profile Skill Bars */
+.skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 18px 0;
+}
+
+.skill-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  color: var(--text);
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.skill-bar {
+  height: 9px;
+  background: var(--skill-track);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.skill-progress {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--pink));
+  border-radius: 10px;
+  transition: width 0.4s ease;
 }
