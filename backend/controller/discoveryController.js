@@ -6,6 +6,7 @@ const explainMatch = require("../utils/explain");
 const { teamCoverage, teamAwareScore } = require("../utils/teamMatching");
 const { teamImpact, openRoles } = require("../utils/teamImpact");
 const { cleanText } = require("../middleware/sanitize");
+const { getAvailableSlots } = require("../utils/teamCapacity");
 
 const PAGE_SIZE = 6;
 
@@ -72,6 +73,7 @@ async function getProjects(req, res) {
       page: page,
       pages: Math.ceil(total / PAGE_SIZE)
     });
+    
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -100,10 +102,7 @@ async function getProjectDetail(req, res) {
 
     const coverage = teamCoverage(project, team);
 
-    let openSpots = project.teamSize - team.length;
-    if (openSpots < 0) {
-      openSpots = 0;
-    }
+    const openSpots = Math.max(0, await getAvailableSlots(project));
 
     const pending = await Request.findOne({
       project: project._id,
@@ -157,6 +156,7 @@ async function getTeamCandidates(req, res) {
     if (project.status === "complete" || project.status === "in_progress" || project.status === "archived") {
       return res.status(400).json({ message: "This project is not looking for members." });
     }
+    const openSpots = Math.max(0, await getAvailableSlots(project));
 
     // team = owner + members (the owner counts as a team member)
     const team = [project.owner];
@@ -204,6 +204,7 @@ async function getTeamCandidates(req, res) {
         teamSize: project.teamSize,
         teamCount: team.length
       },
+      openSpots: openSpots,
       coverage: coverage.skills,
       summary: coverage.summary,
       gaps: coverage.gaps,

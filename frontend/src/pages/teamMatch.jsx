@@ -15,21 +15,22 @@ function TeamMatch() {
   const [error, setError] = useState("");
   const [invited, setInvited] = useState({});
   const [inviteMsg, setInviteMsg] = useState("");
+  const [openSpots, setOpenSpots] = useState(0);
 
-  useEffect(function () {
-    setLoading(true);
-    setError("");
+  function loadTeamData(showLoading) {
+    if (showLoading) {
+      setLoading(true);
+      setError("");
+    }
 
-    request("/api/projects/" + id + "/team-candidates")
+    return request("/api/projects/" + id + "/team-candidates")
       .then(function (data) {
-        
-
-        // Match the structure returned by getTeamCandidates()
         setProject(data.project || null);
         setCoverage(Array.isArray(data.coverage) ? data.coverage : []);
         setCandidates(Array.isArray(data.candidates) ? data.candidates : []);
         setSummary(data.summary);
         setGaps(data.gaps);
+        setOpenSpots(data.openSpots || 0);
       })
       .catch(function (err) {
         setError(err.message || "Failed to load team suggestions.");
@@ -37,9 +38,18 @@ function TeamMatch() {
       .finally(function () {
         setLoading(false);
       });
+  }
+
+  useEffect(function () {
+    loadTeamData(true);
   }, [id]);
 
   function handleInvite(studentId) {
+    if (openSpots <= 0) {
+      setInviteMsg("No available team spots.");
+      return;
+    }
+
     setInviteMsg("");
 
     request("/api/requests", "POST", {
@@ -51,6 +61,9 @@ function TeamMatch() {
         setInvited(function (prev) {
           return { ...prev, [studentId]: true };
         });
+
+        setInviteMsg("Invitation sent!");
+        return loadTeamData(false);
       })
       .catch(function (err) {
         setInviteMsg(err.message);
@@ -124,6 +137,17 @@ function TeamMatch() {
           Back
         </Link>
       </div>
+    <div className="card">
+      <h3>Team Capacity</h3>
+
+      <h2>{project.teamCount}/{project.teamSize}</h2>
+
+      <p>
+        {openSpots > 0
+          ? openSpots + " spot(s) available for new members."
+          : "No available spots. Pending invitations and requests may be reserving the remaining capacity."}
+      </p>
+    </div>
 
       {inviteMsg && <p className="error">{inviteMsg}</p>}
 
@@ -341,12 +365,16 @@ function TeamMatch() {
               </Link>
 
               <button
-                disabled={invited[c._id]}
-                onClick={function () {
-                  handleInvite(c._id);
-                }}
-              >
-                {invited[c._id] ? "Invited" : "Invite"}
+                  disabled={invited[c._id] || openSpots <= 0}
+                  onClick={function () {
+                    handleInvite(c._id);
+                  }}
+                >
+                  {invited[c._id]
+                    ? "Invited"
+                    : openSpots <= 0
+                      ? "Team Full"
+                      : "Invite"}
               </button>
             </div>
           </div>

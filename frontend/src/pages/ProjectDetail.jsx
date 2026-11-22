@@ -242,8 +242,8 @@ function ProjectDetail() {
 
         <p>
           {openSpots > 0
-            ? openSpots + " open spot(s) left in the team."
-            : "The team has no open spots."}
+            ? openSpots + " spot(s) available, after accounting for pending requests and invitations."
+            : "No spots currently available. Pending requests and invitations may be reserving the remaining spots."}
         </p>
 
         {openRoles.length > 0 && (

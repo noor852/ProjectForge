@@ -59,7 +59,8 @@ function Requests() {
 
       <h3>Waiting for your answer</h3>
       {received.length === 0 && <p className="muted">Nothing waiting.</p>}
-      {received.map(function (r) {
+      {received.map(function (r) 
+      {
         return (
           <div className="card project-card" key={r._id}>
             {r.type === "request" ? (
@@ -71,6 +72,12 @@ function Requests() {
               <p>
                 {r.project.owner.name} invited you to join{" "}
                 <Link to={"/project/" + r.project._id}>{r.project.title}</Link>
+              </p>
+              
+            )}
+            {r.type === "invite" && r.expiresAt && (
+              <p className="muted">
+                Expires: {new Date(r.expiresAt).toLocaleString()}
               </p>
             )}
             <div className="project-actions">
@@ -85,7 +92,8 @@ function Requests() {
 
       <h3>Sent by you</h3>
       {sent.length === 0 && <p className="muted">You haven't sent anything.</p>}
-      {sent.map(function (r) {
+      {sent.map(function (r) 
+      {
         return (
           <div className="card project-card" key={r._id}>
             {r.type === "request" ? (
@@ -106,6 +114,12 @@ function Requests() {
                   Cancel
                 </button>
               </div>
+            )}
+
+            {r.type === "invite" && r.expiresAt && r.status === "pending" && (
+              <p className="muted">
+                Expires: {new Date(r.expiresAt).toLocaleString()}
+              </p>
             )}
           </div>
         );

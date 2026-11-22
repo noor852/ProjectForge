@@ -3,6 +3,7 @@ const Project = require("../models/Projects");
 const User = require("../models/User");
 const { isInTeam, addMemberToTeam } = require("./teamController");
 const { notify, markRequestRead, removeRequestNotifications } = require("../utils/notify");
+const { expireInvitations, getAvailableSlots } = require("../utils/teamCapacity");
 
 // ---------- Feature 10: send a join request or an invitation ----------
 // body: { projectId, type: "request" | "invite", studentId (only for invite) }
@@ -14,12 +15,11 @@ async function sendRequest(req, res) {
     if (!project) {
       return res.status(404).json({ message: "Project not found!" });
     }
+    await expireInvitations(project._id);
     if (project.status !== "looking" && project.status !== "forming") {
       return res.status(400).json({ message: "This project is not accepting members." });
     }
-    if (project.members.length + 1 >= project.teamSize) {
-      return res.status(400).json({ message: "The team is already full." });
-    }
+    
 
     let student;
     if (type === "invite") {
@@ -48,11 +48,22 @@ async function sendRequest(req, res) {
     if (existing) {
       return res.status(400).json({ message: "There is already a pending request or invitation." });
     }
+    // Check available capacity, including pending invitations and join requests
+    const availableSlots = await getAvailableSlots(project);
+
+    if (availableSlots <= 0) {
+      return res.status(400).json({
+        message: "No team slots are available. The team is full or all remaining slots are reserved."
+      });
+    }
 
     const request = await Request.create({
       project: project._id,
       student: student._id,
-      type: type
+      type: type,
+      expiresAt: type === "invite"
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+        : null
     });
 
     // bell icon: tell the other person
@@ -80,6 +91,7 @@ async function sendRequest(req, res) {
 // received = waiting for MY answer, sent = things I started
 async function getMyRequests(req, res) {
   try {
+    await expireInvitations();
     const myProjects = await Project.find({ owner: req.user._id }).select("_id");
     const myProjectIds = myProjects.map(function (p) { return p._id; });
 
@@ -115,10 +127,15 @@ async function getMyRequests(req, res) {
 async function respondToRequest(req, res) {
   try {
     const { action } = req.body;
-    const request = await Request.findById(req.params.id).populate("project");
+    let request = await Request.findById(req.params.id).populate("project");
     if (!request) {
       return res.status(404).json({ message: "Request not found!" });
     }
+    // before allowing a response make sure to expire old invites
+    await expireInvitations(request.project._id);
+
+    // refresh the request because its status may have changed
+    request = await Request.findById(req.params.id).populate("project");
     if (request.status !== "pending") {
       return res.status(400).json({ message: "This request was already answered." });
     }
@@ -157,7 +174,21 @@ async function respondToRequest(req, res) {
     }
 
     // accept: feature 11 creates the membership (and checks the team size limit)
+    // accept: check that the reserved slot is still valid
+    const availableSlots = await getAvailableSlots(project);
+    if (availableSlots < 0) {
+      return res.status(400).json({
+        message: "No team slots are available anymore."
+      });
+    }
+
     const student = await User.findById(request.student);
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found!" });
+    }
+
+
     let role = "member";
     if (student.preferredRoles.length > 0) {
       role = student.preferredRoles[0];          // owner can change it later (feature 11)
