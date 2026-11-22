@@ -8,13 +8,14 @@ function toList(text) {
 }
 
 function ProjectForm() {
-  const { id } = useParams();       // id ho to edit, warna new project
+  const { id } = useParams();       // with an id this is edit mode, otherwise a new project
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
     title: "",
     description: "",
     domain: "",
+    expectedDuration: "",
     teamSize: 4,
     status: "looking",
     technologies: "",
@@ -25,7 +26,7 @@ function ProjectForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // edit mode me purana project form me daalo
+  // in edit mode, load the old project into the form
   useEffect(function () {
     if (!id) {
       return;
@@ -37,6 +38,7 @@ function ProjectForm() {
           title: p.title || "",
           description: p.description || "",
           domain: p.domain || "",
+          expectedDuration: p.expectedDuration || "",
           teamSize: p.teamSize || 4,
           status: p.status || "looking",
           technologies: (p.technologies || []).join(", "),
@@ -93,6 +95,7 @@ function ProjectForm() {
       title: form.title,
       description: form.description,
       domain: form.domain,
+      expectedDuration: form.expectedDuration,
       teamSize: Number(form.teamSize),
       status: form.status,
       technologies: toList(form.technologies),
@@ -137,12 +140,22 @@ function ProjectForm() {
       </label>
 
       <label>
+        Expected duration
+        <input
+          name="expectedDuration"
+          placeholder="3 months, 1 semester"
+          value={form.expectedDuration}
+          onChange={handleChange}
+        />
+      </label>
+
+      <label>
         Team size
         <input
           type="number"
           name="teamSize"
-          min="1"
-          max="20"
+          min="2"
+          max="4"
           value={form.teamSize}
           onChange={handleChange}
         />
@@ -151,12 +164,19 @@ function ProjectForm() {
       <label>
         Status
         <select name="status" value={form.status} onChange={handleChange}>
+          {(form.status === "forming" || form.status === "complete") && (
+            <option value={form.status} disabled>
+              {form.status === "forming" ? "Forming (automatic)" : "Complete (automatic)"}
+            </option>
+          )}
           <option value="draft">Draft</option>
           <option value="looking">Looking for members</option>
-          <option value="forming">Forming</option>
           <option value="in_progress">In progress</option>
-          <option value="complete">Complete</option>
+          <option value="archived">Archived</option>
         </select>
+        <small className="muted">
+          Forming and complete change automatically when members join or leave.
+        </small>
       </label>
 
       <label>

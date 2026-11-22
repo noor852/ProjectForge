@@ -1,13 +1,17 @@
 const Project = require("../models/Projects");
 const User = require("../models/User");
 const calcScore = require("../utils/matching");
+const explainMatch = require("../utils/explain");
+const updateStatus = require("../utils/teamStatus");
+const { cleanText } = require("../middleware/sanitize");
 
-// body se sirf wahi fields lo jo allowed hain
+// take only the allowed fields from the request body
 function getFields(body) {
   return {
     title: body.title,
     description: body.description,
     domain: body.domain,
+    expectedDuration: body.expectedDuration,
     teamSize: body.teamSize,
     technologies: body.technologies,
     rolesNeeded: body.rolesNeeded,
@@ -20,6 +24,10 @@ async function createProject(req, res) {
   try {
     const fields = getFields(req.body);
     fields.owner = req.user._id;
+    // forming and complete are automatic, a new project cannot start with them
+    if (fields.status === "forming" || fields.status === "complete") {
+      fields.status = "looking";
+    }
     const project = await Project.create(fields);
     res.status(201).json({ project: project });
   } catch (err) {
@@ -57,11 +65,34 @@ async function updateProject(req, res) {
     if (project.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Only the owner can edit this project!" });
     }
+
+    const fields = getFields(req.body);
+
+    // the team size cannot be smaller than the people already in the team (owner counts too)
+    const teamCount = project.members.length + 1;
+    if (fields.teamSize !== undefined && Number(fields.teamSize) < teamCount) {
+      return res.status(400).json({
+        message: "Team size cannot be smaller than the current team (" + teamCount + ")."
+      });
+    }
+
+    // forming and complete are automatic, the owner cannot set them by hand
+    if ((fields.status === "forming" || fields.status === "complete") && fields.status !== project.status) {
+      return res.status(400).json({
+        message: "Forming and complete are set automatically from the team size."
+      });
+    }
+
     const updated = await Project.findByIdAndUpdate(
       req.params.id,
-      getFields(req.body),
+      fields,
       { new: true, runValidators: true }
     );
+
+    // recalculate the automatic status (for example the team became full after a team size change)
+    updateStatus(updated);
+    await updated.save();
+
     res.json({ project: updated });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -83,6 +114,7 @@ async function deleteProject(req, res) {
     res.status(400).json({ message: err.message });
   }
 }
+
 async function getCandidates(req, res) {
   try {
     const project = await Project.findById(req.params.id);
@@ -93,10 +125,10 @@ async function getCandidates(req, res) {
       return res.status(403).json({ message: "Only the owner can see candidates!" });
     }
 
-    const search = (req.query.search || "").toLowerCase().trim();
-    const experience = req.query.experience || "";
+    const search = cleanText(String(req.query.search || "")).toLowerCase();
+    const experience = cleanText(String(req.query.experience || ""));
 
-    // jo pehle se team me hain unhe nikal do
+    // skip students who are already in the team
     const memberIds = project.members.map(function (m) {
       return m.user.toString();
     });
@@ -135,11 +167,12 @@ async function getCandidates(req, res) {
         preferredRoles: u.preferredRoles,
         skills: u.skills,
         score: r.score,
-        missingSkills: r.missingSkills
+        missingSkills: r.missingSkills,
+        reasons: explainMatch(project, u, r)
       });
     }
 
-    // sabse zyada score wala pehle
+    // highest score first
     result.sort(function (a, b) {
       return b.score - a.score;
     });
@@ -149,4 +182,5 @@ async function getCandidates(req, res) {
     res.status(500).json({ message: err.message });
   }
 }
+
 module.exports = { createProject, getMyProjects, getProject, updateProject, deleteProject, getCandidates };

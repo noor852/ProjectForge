@@ -51,6 +51,20 @@ function ProjectDetail() {
       });
   }
 
+  // owner changes the role of a member
+  function handleRole(userId, oldRole) {
+    const role = window.prompt("Enter the new role for this member", oldRole || "");
+    if (role === null || role.trim() === "") {
+      return;
+    }
+    setMsg("");
+    request("/api/projects/" + id + "/members/" + userId, "PUT", { role: role })
+      .then(loadProject)
+      .catch(function (err) {
+        setMsg(err.message);
+      });
+  }
+
   function handleJoin() {
     setMsg("");
     request("/api/requests", "POST", { projectId: id, type: "request" })
@@ -98,6 +112,9 @@ function ProjectDetail() {
           </div>
 
           <p>{project.description}</p>
+          {project.expectedDuration && (
+            <p className="muted">Expected duration: {project.expectedDuration}</p>
+          )}
         </div>
 
         {/* Project Stats */}
@@ -207,6 +224,18 @@ function ProjectDetail() {
                   </Link>
                   <span>{m.role || "Team Member"}</span>
                 </div>
+
+                {isOwner && (
+                  <button
+                    type="button"
+                    className="btn-outline"
+                    onClick={function () {
+                      handleRole(m.user._id, m.role);
+                    }}
+                  >
+                    Change role
+                  </button>
+                )}
 
                 {(isOwner || isSelf) ? (
                   <button

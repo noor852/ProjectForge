@@ -1,7 +1,7 @@
 
 // ensures that the project status is with the team so that it can be used for people joining anf leaving. draft and inprogress are chosen by project owner
 function updateStatus(project) {
-  if (project.status === "draft" || project.status === "in_progress") {
+   if (project.status === "draft" || project.status === "in_progress" || project.status === "archived") {
     return;
   }
  

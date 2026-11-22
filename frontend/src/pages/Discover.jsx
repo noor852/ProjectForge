@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { request } from "../api";
 
+// the chip value is searched inside the project's domain text
+const DOMAINS = [
+  { label: "All", value: "" },
+  { label: "Web", value: "web" },
+  { label: "AI / ML", value: "ai" },
+  { label: "Cybersecurity", value: "cyber" },
+  { label: "Mobile", value: "mobile" },
+  { label: "Data", value: "data" }
+];
+
 // Feature 4: browse and filter all projects
 function Discover() {
   const [projects, setProjects] = useState([]);
@@ -15,14 +25,16 @@ function Discover() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function loadProjects(pageNumber) {
+  // domainValue is passed when a chip is clicked, because the state is not updated yet
+  async function loadProjects(pageNumber, domainValue) {
     setLoading(true);
     setError("");
+    const domainToUse = domainValue === undefined ? domain : domainValue;
     try {
       const url =
         "/api/projects?page=" + pageNumber +
         "&search=" + encodeURIComponent(search) +
-        "&domain=" + encodeURIComponent(domain) +
+        "&domain=" + encodeURIComponent(domainToUse) +
         "&skills=" + encodeURIComponent(skills) +
         "&status=" + status;
       const data = await request(url);
@@ -44,6 +56,11 @@ function Discover() {
   function handleSearch(e) {
     e.preventDefault();
     loadProjects(1);
+  }
+
+  function handleChip(value) {
+    setDomain(value);
+    loadProjects(1, value);
   }
 
   function handleClear() {
@@ -70,63 +87,89 @@ function Discover() {
 
   return (
     <div>
-      <div className="page-header">
-        <h2>Discover Projects</h2>
-      </div>
+      <form onSubmit={handleSearch}>
+        <div className="hero">
+          <h1>Find the right team for your project</h1>
+          <p>Browse student projects and join the ones that fit your skills.</p>
+          <div className="hero-search">
+            <input
+              type="search"
+              aria-label="Search projects"
+              placeholder="Search by title or description"
+              value={search}
+              onChange={function (e) { setSearch(e.target.value); }}
+            />
+            <button>Search</button>
+          </div>
+        </div>
 
-      <form className="card search-bar" onSubmit={handleSearch}>
-        <input
-          placeholder="Search title or description"
-          value={search}
-          onChange={function (e) { setSearch(e.target.value); }}
-        />
-        <input
-          placeholder="Domain (web, ai)"
-          value={domain}
-          onChange={function (e) { setDomain(e.target.value); }}
-        />
-        <input
-          placeholder="Skills (react, node)"
-          value={skills}
-          onChange={function (e) { setSkills(e.target.value); }}
-        />
-        <select value={status} onChange={function (e) { setStatus(e.target.value); }}>
-          <option value="">Any status</option>
-          <option value="looking">Looking</option>
-          <option value="forming">Forming</option>
-          <option value="complete">Complete</option>
-          <option value="in_progress">In progress</option>
-        </select>
-        <button>Search</button>
-        <button type="button" className="btn-outline" onClick={handleClear}>Clear</button>
+        <div className="chip-row">
+          {DOMAINS.map(function (d) {
+            return (
+              <button
+                type="button"
+                key={d.label}
+                className={domain === d.value ? "chip chip-active" : "chip"}
+                onClick={function () { handleChip(d.value); }}
+              >
+                {d.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="filter-row">
+          <input
+            aria-label="Skills"
+            placeholder="Skills (react, node)"
+            value={skills}
+            onChange={function (e) { setSkills(e.target.value); }}
+          />
+          <select
+            aria-label="Status"
+            value={status}
+            onChange={function (e) { setStatus(e.target.value); }}
+          >
+            <option value="">Any status</option>
+            <option value="looking">Looking</option>
+            <option value="forming">Forming</option>
+            <option value="complete">Complete</option>
+            <option value="in_progress">In progress</option>
+          </select>
+          <button type="button" className="btn-outline" onClick={handleClear}>Clear</button>
+        </div>
       </form>
 
       {error && <p className="error">{error}</p>}
       {loading && <p>Loading...</p>}
       {!loading && !error && <p className="muted">{total} project(s) found</p>}
 
-      {projects.map(function (p) {
-        return (
-          <div className="card project-card" key={p._id}>
-            <h3>{p.title}</h3>
-            <p className="muted">
-              {p.domain ? p.domain + " | " : ""}
-              {p.status.replace("_", " ")} | {p.members.length + 1}/{p.teamSize} members
-              {p.owner ? " | by " + p.owner.name : ""}
-            </p>
-            <p>{p.description}</p>
-            {p.requiredSkills.length > 0 && (
-              <p>
-                Needs:{" "}
-                {p.requiredSkills.map(function (s) { return s.name; }).join(", ")}
-              </p>
-            )}
-            <div className="project-actions">
-              <Link to={"/project/" + p._id} className="link-btn">View Details</Link>
+      <div className="project-grid">
+        {projects.map(function (p) {
+          return (
+            <div className="project-tile" key={p._id}>
+              <div className="tile-top">
+                <span className="pill pill-domain">{p.domain || "General"}</span>
+                <span className="pill pill-status">{p.status.replace("_", " ")}</span>
+              </div>
+              <h3 className="tile-title">{p.title}</h3>
+              <p className="tile-desc">{p.description}</p>
+              <div className="tile-skills">
+                {p.requiredSkills.slice(0, 4).map(function (s) {
+                  return <span className="skill-tag" key={s.name}>{s.name}</span>;
+                })}
+              </div>
+              <div className="tile-footer">
+                <span>
+                  {p.members.length + 1}/{p.teamSize} members
+                  {p.owner ? " · by " + p.owner.name : ""}
+                </span>
+                <Link to={"/project/" + p._id}>View project</Link>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       {pages > 1 && (
         <div className="project-actions">

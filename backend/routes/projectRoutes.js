@@ -8,17 +8,21 @@ const {
   deleteProject,
   getCandidates
 } = require("../controller/projectController");
+const { shareProject, searchPage } = require("../controller/shareController");
 
 const { getProjects, getProjectDetail, getTeamCandidates } = require("../controller/discoveryController");
 const { removeMember, updateRole } = require("../controller/teamController");
 
-router.get("/", auth, getProjects);   
+router.get("/", auth, getProjects); 
+router.get("/search-page", searchPage);  
 router.delete("/:id/members/:userId", auth, removeMember);
 router.get("/:id/detail", auth, getProjectDetail);  
 router.get("/:id/team-candidates", auth, getTeamCandidates); 
 router.post("/", auth, createProject);
 router.get("/mine", auth, getMyProjects);   // /:id se pehle
 router.get("/:id", auth, getProject);
+
+router.get("/:id/share", shareProject);
 router.put("/:id", auth, updateProject);
 router.delete("/:id", auth, deleteProject);
 router.get("/:id/candidates", auth, getCandidates);

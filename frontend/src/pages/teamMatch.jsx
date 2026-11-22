@@ -23,7 +23,7 @@ function TeamMatch() {
 
     request("/api/projects/" + id + "/team-candidates")
       .then(function (data) {
-        console.log("Team candidates API response:", data);
+        
 
         // Match the structure returned by getTeamCandidates()
         setProject(data.project || null);
@@ -264,17 +264,16 @@ function TeamMatch() {
               </p>
             )}
 
-            {fills.length > 0 && (
-              <p className="success">
-                Fills team gaps: {fills.join(", ")}
-              </p>
-            )}
-
-            {overlap.length > 0 && (
-              <p className="muted">
-                Team already covers: {overlap.join(", ")}
-              </p>
-            )}
+                        <h4>Why this match</h4>
+            <ul className="reasons">
+              {(c.reasons || []).map(function (r, i) {
+                return (
+                  <li key={i} className={r.kind === "good" ? "success" : "error"}>
+                    {r.text}
+                  </li>
+                );
+              })}
+            </ul>
 
             <div className="project-actions">
               <Link to={"/student/" + c._id} className="link-btn">

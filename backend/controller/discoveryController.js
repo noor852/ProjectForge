@@ -1,9 +1,16 @@
 const Project = require("../models/Projects");
 const User = require("../models/User");
 const Request = require("../models/Request");
+const calcScore = require("../utils/matching");
+const explainMatch = require("../utils/explain");
 const { teamCoverage, teamAwareScore } = require("../utils/teamMatching");
+const { cleanText } = require("../middleware/sanitize");
 
 const PAGE_SIZE = 6;
+
+function clean(value) {
+  return value ? cleanText(String(value)) : "";
+}
 
 function toList(text) {
   return text.split(",").map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean);
@@ -15,11 +22,17 @@ function safeRegex(text) {
 
 async function getProjects(req, res) {
   try {
-    const { search, domain, skills, status } = req.query;
+    const search = clean(req.query.search);
+    const domain = clean(req.query.domain);
+    const skills = clean(req.query.skills);
+    const status = clean(req.query.status);
     const page = Math.max(Number(req.query.page) || 1, 1);
 
     const filter = {};
-    filter.status = status ? status : { $ne: "draft" };    // drafts stay private
+    filter.status = status ? status : { $nin: ["draft", "archived"] };   // drafts and archived stay private
+    if (status === "draft" || status === "archived") {
+      filter.owner = req.user._id;   // show only my own
+    }
     if (domain) {
       filter.domain = safeRegex(domain);
     }
@@ -62,7 +75,7 @@ async function getProjectDetail(req, res) {
     const isOwner = project.owner._id.toString() === me;
 
     let isMember = false;
-    const team = [project.owner];                 
+    const team = [project.owner];
     for (let i = 0; i < project.members.length; i++) {
       team.push(project.members[i].user);
       if (project.members[i].user._id.toString() === me) {
@@ -70,7 +83,6 @@ async function getProjectDetail(req, res) {
       }
     }
 
-    
     const coverage = teamCoverage(project, team);
 
     let openSpots = project.teamSize - team.length;
@@ -78,7 +90,6 @@ async function getProjectDetail(req, res) {
       openSpots = 0;
     }
 
-    
     const pending = await Request.findOne({
       project: project._id,
       student: req.user._id,
@@ -101,13 +112,12 @@ async function getProjectDetail(req, res) {
   }
 }
 
-
 async function getStudentProjects(req, res) {
   try {
     const id = req.params.id;
-    const owned = await Project.find({ owner: id, status: { $ne: "draft" } })
+    const owned = await Project.find({ owner: id, status: { $nin: ["draft", "archived"] } })
       .select("title status");
-    const joined = await Project.find({ "members.user": id, status: { $ne: "draft" } })
+    const joined = await Project.find({ "members.user": id, status: { $nin: ["draft", "archived"] } })
       .select("title status owner")
       .populate("owner", "name");
     res.json({ owned: owned, joined: joined });
@@ -128,8 +138,8 @@ async function getTeamCandidates(req, res) {
     if (project.owner._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Only the owner can see suggestions!" });
     }
-    if (project.status === "complete" || project.status === "in_progress") {
-      return res.status(400).json({ message: "This team is already complete." });
+    if (project.status === "complete" || project.status === "in_progress" || project.status === "archived") {
+      return res.status(400).json({ message: "This project is not looking for members." });
     }
 
     // team = owner + members (the owner counts as a team member)
@@ -150,6 +160,7 @@ async function getTeamCandidates(req, res) {
         continue;                                  // already in the team
       }
       const r = teamAwareScore(project, u, coverage);
+      const base = calcScore(project, u);
       candidates.push({
         _id: u._id,
         name: u.name,
@@ -160,7 +171,8 @@ async function getTeamCandidates(req, res) {
         baseScore: r.baseScore,
         gapScore: r.gapScore,
         fills: r.fills,
-        overlap: r.overlap
+        overlap: r.overlap,
+        reasons: explainMatch(project, u, base, { fills: r.fills, overlap: r.overlap })
       });
     }
 

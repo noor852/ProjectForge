@@ -21,12 +21,42 @@ function MyProjects() {
   }, []);
 
   async function handleDelete(id) {
-    if (!window.confirm("Is project ko delete kar dein?")) {
+    if (!window.confirm("Do you want to delete this project?")) {
       return;
     }
     try {
       await request("/api/projects/" + id, "DELETE");
       setProjects(projects.filter(function (p) { return p._id !== id; }));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  // close (archive) a project, or open it again
+  async function toggleArchive(p) {
+    let newStatus = "archived";
+    if (p.status === "archived") {
+      newStatus = "looking";
+    }
+    const body = {
+      title: p.title,
+      description: p.description,
+      domain: p.domain,
+      expectedDuration: p.expectedDuration,
+      teamSize: p.teamSize,
+      technologies: p.technologies,
+      rolesNeeded: p.rolesNeeded,
+      requiredSkills: p.requiredSkills,
+      status: newStatus
+    };
+    try {
+      const data = await request("/api/projects/" + p._id, "PUT", body);
+      setProjects(projects.map(function (x) {
+        if (x._id === p._id) {
+          return data.project;
+        }
+        return x;
+      }));
     } catch (err) {
       setError(err.message);
     }
@@ -44,7 +74,7 @@ function MyProjects() {
       </div>
 
       {error && <p className="error">{error}</p>}
-      {projects.length === 0 && <p className="muted">Abhi koi project nahi hai.</p>}
+      {projects.length === 0 && <p className="muted">You have no projects yet.</p>}
 
       {projects.map(function (p) {
         return (
@@ -55,6 +85,7 @@ function MyProjects() {
               {p.domain ? " | " + p.domain : ""}
             </p>
             <p>{p.description}</p>
+            {p.expectedDuration && <p>Expected duration: {p.expectedDuration}</p>}
             {p.technologies.length > 0 && <p>Technologies: {p.technologies.join(", ")}</p>}
             {p.rolesNeeded && p.rolesNeeded.length > 0 && <p>Roles needed: {p.rolesNeeded.join(", ")}</p>}
             {p.requiredSkills.length > 0 && (
@@ -65,49 +96,69 @@ function MyProjects() {
                 }).join(", ")}
               </p>
             )}
-            
 
-          <div className="project-actions">
+            <div className="project-actions">
 
-            <Link
-              to={"/project/" + p._id}
-              className="link-btn"
-            >
-              Project Details
-            </Link>
+              <Link
+                to={"/project/" + p._id}
+                className="link-btn"
+              >
+                Project Details
+              </Link>
 
-            <Link
-              to={"/project/" + p._id + "/team-match"}
-              className="link-btn"
-            >
-              Team-aware Suggestions
-            </Link>
+              <Link
+                to={"/project/" + p._id + "/team-match"}
+                className="link-btn"
+              >
+                Team-aware Suggestions
+              </Link>
 
-            <Link
-              to={"/projects/" + p._id + "/find"}
-              className="link-btn"
-            >
-              Find Teammates
-            </Link>
+              <Link
+                to={"/projects/" + p._id + "/find"}
+                className="link-btn"
+              >
+                Find Teammates
+              </Link>
 
-            <Link
-              to={"/projects/" + p._id + "/edit"}
-              className="link-btn"
-            >
-              Edit
-            </Link>
+              <Link
+                to={"/projects/" + p._id + "/edit"}
+                className="link-btn"
+              >
+                Edit
+              </Link>
 
-            <button
-              type="button"
-              className="btn-danger"
-              onClick={function () {
-                handleDelete(p._id);
-              }}
-            >
-              Delete
-            </button>
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={function () {
+                  toggleArchive(p);
+                }}
+              >
+                {p.status === "archived" ? "Unarchive" : "Archive"}
+              </button>
 
-          </div>
+              {p.status !== "draft" && p.status !== "archived" && (
+                <a
+                  href={"/api/projects/" + p._id + "/share"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="link-btn"
+                >
+                  Share
+                </a>
+              )}
+
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={function () {
+                  handleDelete(p._id);
+                }}
+              >
+                Delete
+              </button>
+
+            </div>
 
           </div>
         );

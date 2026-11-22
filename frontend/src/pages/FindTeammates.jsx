@@ -38,16 +38,12 @@ function FindTeammates() {
     loadCandidates();
   }
   async function handleInvite(candidateId) {
-    const role = window.prompt("Which role is this person invited for? (e.g. frontend)");
-    if (role === null) {
-      return;
-    }
     setError("");
     try {
-      await request("/api/invitations", "POST", {
+      await request("/api/requests", "POST", {
         projectId: id,
-        studentId: candidateId,
-        role: role
+        type: "invite",
+        studentId: candidateId
       });
       setInvitedIds([...invitedIds, candidateId]);
     } catch (err) {
@@ -112,9 +108,16 @@ function FindTeammates() {
                 }).join(", ")}
               </p>
             )}
-            {c.missingSkills.length > 0 && (
-              <p className="error">Missing: {c.missingSkills.join(", ")}</p>
-            )}
+                        <h4>Why this match</h4>
+            <ul className="reasons">
+              {(c.reasons || []).map(function (r, i) {
+                return (
+                  <li key={i} className={r.kind === "good" ? "success" : "error"}>
+                    {r.text}
+                  </li>
+                );
+              })}
+            </ul>
             <div className="project-actions">
               <Link to={"/student/" + c._id} className="link-btn">View Profile</Link>
                             {invitedIds.indexOf(c._id) !== -1 ? (

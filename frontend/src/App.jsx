@@ -3,8 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import { request } from "./api";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/login";
-import Register from "./pages/register";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
 import StudentProfile from "./pages/StudentProfile";
@@ -14,7 +14,7 @@ import FindTeammates from "./pages/FindTeammates";
 import Discover from "./pages/Discover";
 import ProjectDetail from "./pages/ProjectDetail";
 import TeamMatch from "./pages/teamMatch";
-import Invitations from "./pages/Invitations";
+
 import Requests from "./pages/Requests";
 
 
@@ -121,14 +121,7 @@ function App() {
           <Route path="/requests" element={<ProtectedRoute token={token} checking={checking}><Requests /></ProtectedRoute>} />
           <Route path="/project/:id" element={<ProtectedRoute token={token} checking={checking}><ProjectDetail /></ProtectedRoute>} />
           <Route path="/project/:id/team-match" element={<ProtectedRoute token={token} checking={checking}><TeamMatch /></ProtectedRoute>} />
-                    <Route
-            path="/invitations"
-            element={
-              <ProtectedRoute token={token} checking={checking}>
-                <Invitations />
-              </ProtectedRoute>
-            }
-          />
+                   
         </Routes>
       </div>
     </div>

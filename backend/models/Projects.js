@@ -17,11 +17,12 @@ const projectSchema = new mongoose.Schema({
     title: {type: String, required: true},
     description: {type: String, required: true},
     domain: String,
-    teamSize: {type: Number, default: 4},
+    expectedDuration: String,
+    teamSize: {type: Number, default: 4,min:2, max:4},
     technologies: [String],
     requiredSkills: [projectSkills],
     rolesNeeded: [String],
-    status: {type: String, enum: ['draft', 'looking', 'forming', 'complete', 'in_progress'], default: 'looking'},
+    status: {type: String, enum: ['draft', 'looking', 'forming', 'complete', 'in_progress','archived'], default: 'looking'},
     owner: {type: mongoose.Schema.Types.ObjectId, ref: "User", required: true},
     members: [projectMembers]
 }, {timestamps: true});
