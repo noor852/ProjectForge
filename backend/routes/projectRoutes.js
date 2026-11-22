@@ -10,7 +10,7 @@ const {
 } = require("../controller/projectController");
 const { shareProject, searchPage } = require("../controller/shareController");
 
-const { getProjects, getProjectDetail, getTeamCandidates } = require("../controller/discoveryController");
+const { getProjects, getProjectDetail, getTeamCandidates, getRecommendations } = require("../controller/discoveryController");
 const { removeMember, updateRole } = require("../controller/teamController");
 
 router.get("/", auth, getProjects); 
@@ -20,6 +20,7 @@ router.get("/:id/detail", auth, getProjectDetail);
 router.get("/:id/team-candidates", auth, getTeamCandidates); 
 router.post("/", auth, createProject);
 router.get("/mine", auth, getMyProjects);   // /:id se pehle
+router.get("/recommended", auth, getRecommendations);   // /:id se pehle
 router.get("/:id", auth, getProject);
 
 router.get("/:id/share", shareProject);

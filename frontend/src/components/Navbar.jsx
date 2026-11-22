@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
+import NotificationBell from "./NotificationBell";
 
 function navClass(state) {
   return state.isActive ? "nav-active" : "";
@@ -44,6 +45,8 @@ function Navbar(props) {
             <NavLink to="/projects" className={navClass}>My Projects</NavLink>
             <NavLink to="/requests" className={navClass}>Requests</NavLink>
             <Link to="/projects/new" className="nav-cta">+ Post project</Link>
+
+            <NotificationBell />
 
             <div className="account">
               <button

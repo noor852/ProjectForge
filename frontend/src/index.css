@@ -997,3 +997,157 @@ button:disabled {
     margin-left: auto;
   }
 }
+
+/* ---------- Team impact + recommendations ---------- */
+.impact-box {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--tint);
+}
+
+.impact-box h4 {
+  margin: 0;
+}
+
+.impact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.impact-label {
+  width: 130px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.impact-notes {
+  list-style: none;
+  padding-left: 0;
+  margin: 12px 0 0;
+}
+
+.impact-notes li {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+/* ---------- Notification bell ---------- */
+.bell-wrap {
+  position: relative;
+}
+
+.bell-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+
+.bell-btn:hover {
+  background: var(--tint);
+  box-shadow: none;
+}
+
+.bell-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--danger);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.notif-menu {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  width: 340px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(11, 31, 42, 0.18);
+  padding: 6px;
+  z-index: 50;
+}
+
+.notif-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.notif-markall {
+  padding: 4px 8px;
+  font-size: 13px;
+  background: transparent;
+  color: var(--primary);
+  border: none;
+}
+
+.notif-markall:hover {
+  background: var(--tint);
+  box-shadow: none;
+  transform: none;
+}
+
+.notif-empty {
+  padding: 14px 10px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.notif-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+}
+
+.notif-item small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.notif-item:hover {
+  background: var(--tint);
+  color: var(--text);
+  transform: none;
+  box-shadow: none;
+}
+
+.notif-unread {
+  background: var(--tint);
+  font-weight: 600;
+}

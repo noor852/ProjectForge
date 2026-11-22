@@ -18,6 +18,8 @@ function Discover() {
   const [search, setSearch] = useState("");
   const [domain, setDomain] = useState("");
   const [skills, setSkills] = useState("");
+  const [technologies, setTechnologies] = useState("");
+  const [teamSize, setTeamSize] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -36,6 +38,8 @@ function Discover() {
         "&search=" + encodeURIComponent(search) +
         "&domain=" + encodeURIComponent(domainToUse) +
         "&skills=" + encodeURIComponent(skills) +
+        "&technologies=" + encodeURIComponent(technologies) +
+        "&teamSize=" + teamSize +
         "&status=" + status;
       const data = await request(url);
       setProjects(data.projects);
@@ -67,6 +71,8 @@ function Discover() {
     setSearch("");
     setDomain("");
     setSkills("");
+    setTechnologies("");
+    setTeamSize("");
     setStatus("");
     // state updates are async, so load with empty filters directly
     setLoading(true);
@@ -125,6 +131,22 @@ function Discover() {
             value={skills}
             onChange={function (e) { setSkills(e.target.value); }}
           />
+          <input
+            aria-label="Technologies"
+            placeholder="Technologies (mongodb, express)"
+            value={technologies}
+            onChange={function (e) { setTechnologies(e.target.value); }}
+          />
+          <select
+            aria-label="Team size"
+            value={teamSize}
+            onChange={function (e) { setTeamSize(e.target.value); }}
+          >
+            <option value="">Any team size</option>
+            <option value="2">2 members</option>
+            <option value="3">3 members</option>
+            <option value="4">4 members</option>
+          </select>
           <select
             aria-label="Status"
             value={status}
@@ -136,6 +158,7 @@ function Discover() {
             <option value="complete">Complete</option>
             <option value="in_progress">In progress</option>
           </select>
+          <button type="submit">Apply filters</button>
           <button type="button" className="btn-outline" onClick={handleClear}>Clear</button>
         </div>
       </form>

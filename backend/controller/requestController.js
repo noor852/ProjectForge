@@ -2,6 +2,7 @@ const Request = require("../models/Request");
 const Project = require("../models/Projects");
 const User = require("../models/User");
 const { isInTeam, addMemberToTeam } = require("./teamController");
+const { notify, markRequestRead, removeRequestNotifications } = require("../utils/notify");
 
 // ---------- Feature 10: send a join request or an invitation ----------
 // body: { projectId, type: "request" | "invite", studentId (only for invite) }
@@ -53,6 +54,22 @@ async function sendRequest(req, res) {
       student: student._id,
       type: type
     });
+
+    // bell icon: tell the other person
+    if (type === "invite") {
+      await notify(
+        student._id, "invite",
+        req.user.name + " invited you to join \"" + project.title + "\"",
+        project._id, request._id
+      );
+    } else {
+      await notify(
+        project.owner, "request",
+        req.user.name + " wants to join \"" + project.title + "\"",
+        project._id, request._id
+      );
+    }
+
     res.status(201).json({ request: request });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -123,6 +140,16 @@ async function respondToRequest(req, res) {
     if (action === "decline") {
       request.status = "declined";
       await request.save();
+
+      await markRequestRead(request._id);
+      // the person who sent it gets the answer
+      const declineTo = request.type === "invite" ? project.owner : request.student;
+      const declineWhat = request.type === "invite" ? "your invitation to" : "your request to join";
+      await notify(
+        declineTo, "declined",
+        req.user.name + " declined " + declineWhat + " \"" + project.title + "\"",
+        project._id, request._id
+      );
       return res.json({ request: request });
     }
     if (action !== "accept") {
@@ -143,6 +170,15 @@ async function respondToRequest(req, res) {
 
     request.status = "accepted";
     await request.save();
+
+    await markRequestRead(request._id);
+    const acceptTo = request.type === "invite" ? project.owner : request.student;
+    const acceptWhat = request.type === "invite" ? "your invitation to" : "your request to join";
+    await notify(
+      acceptTo, "accepted",
+      req.user.name + " accepted " + acceptWhat + " \"" + project.title + "\"",
+      project._id, request._id
+    );
 
     // team is full now -> nobody else can join, close the other open requests
     if (project.status === "complete") {
@@ -182,6 +218,7 @@ async function cancelRequest(req, res) {
     }
 
     await request.deleteOne();
+    await removeRequestNotifications(request._id);
     res.json({ message: "Cancelled" });
   } catch (err) {
     res.status(400).json({ message: err.message });

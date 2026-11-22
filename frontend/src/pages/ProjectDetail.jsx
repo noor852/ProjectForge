@@ -9,6 +9,11 @@ function ProjectDetail() {
   const [isOwner, setIsOwner] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [pendingType, setPendingType] = useState(null);
+  const [coverage, setCoverage] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [gaps, setGaps] = useState([]);
+  const [openSpots, setOpenSpots] = useState(0);
+  const [openRoles, setOpenRoles] = useState([]);
   const [meId, setMeId] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
@@ -22,6 +27,11 @@ function ProjectDetail() {
         setIsMember(data.isMember);
         setMeId(data.meId);
         setPendingType(data.pendingType);
+        setCoverage(data.coverage || []);
+        setSummary(data.summary || null);
+        setGaps(data.gaps || []);
+        setOpenSpots(data.openSpots || 0);
+        setOpenRoles(data.openRoles || []);
       })
       .catch(function (err) {
         setError(err.message);
@@ -188,6 +198,88 @@ function ProjectDetail() {
               );
             })}
           </div>
+        )}
+
+        {/* Team skill coverage (Feature 12) */}
+        <h3>Team Skill Coverage</h3>
+
+        {summary === null || coverage.length === 0 ? (
+          <p className="muted">Coverage is shown once the project has required skills.</p>
+        ) : (
+          <div>
+            <p>
+              The current team covers <b>{summary.overallCoverage}%</b> of what the project needs
+              ({summary.covered} covered, {summary.partial} partial, {summary.missing} missing).
+            </p>
+
+            {coverage.map(function (c) {
+              return (
+                <div key={c.name} className="coverage-row">
+                  <div className="coverage-info">
+                    <b>{c.name}</b>
+                    <span className="muted">
+                      {c.importance} | Required: {c.minLevel}/5
+                    </span>
+                  </div>
+
+                  <div className="bar">
+                    <div
+                      className={"bar-fill bar-" + c.status}
+                      style={{ width: c.percentage + "%" }}
+                    ></div>
+                  </div>
+
+                  <span className="muted">{c.best}/5 ({c.percentage}%)</span>
+                  <span className={"badge badge-" + c.status}>{c.status}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Remaining needs (Feature 14) */}
+        <h3>Remaining Needs</h3>
+
+        <p>
+          {openSpots > 0
+            ? openSpots + " open spot(s) left in the team."
+            : "The team has no open spots."}
+        </p>
+
+        {openRoles.length > 0 && (
+          <div>
+            <p className="muted">Roles nobody has taken yet:</p>
+            <div className="tag-list">
+              {openRoles.map(function (role) {
+                return <span className="role-tag" key={role}>{role}</span>;
+              })}
+            </div>
+          </div>
+        )}
+
+        {gaps.length > 0 ? (
+          <div>
+            <p className="muted">Skills the team still needs:</p>
+            {gaps.map(function (g) {
+              return (
+                <div key={g.name} className="gap-item">
+                  <div>
+                    <b>{g.name}</b>
+                    <p className="muted">
+                      {g.status === "missing"
+                        ? "No team member has this skill."
+                        : "Team proficiency is below the required level " + g.minLevel + "/5."}
+                    </p>
+                  </div>
+                  <span className={g.priority === "high" ? "badge badge-high" : "badge badge-medium"}>
+                    {g.priority} priority
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          requiredSkills.length > 0 && <p className="success">All required skills are covered by the team.</p>
         )}
 
         {/* Team */}

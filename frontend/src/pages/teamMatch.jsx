@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { request } from "../api";
@@ -68,6 +67,27 @@ function TeamMatch() {
     }
 
     return "score score-low";
+  }
+
+  // Feature 9: badge colour and text for the impact level
+  function impactClass(level) {
+    if (level === "high") {
+      return "badge badge-covered";
+    }
+    if (level === "medium") {
+      return "badge badge-partial";
+    }
+    if (level === "low") {
+      return "badge badge-draft";
+    }
+    return "badge badge-missing";
+  }
+
+  function impactText(level) {
+    if (level === "none") {
+      return "no impact";
+    }
+    return level + " impact";
   }
 
   if (loading) {
@@ -274,6 +294,46 @@ function TeamMatch() {
                 );
               })}
             </ul>
+
+            {/* Feature 9: what happens to the team if this student joins */}
+            {c.impact && (
+              <div className="impact-box">
+                <div className="candidate-top">
+                  <h4>Impact on the team</h4>
+                  <span className={impactClass(c.impact.level)}>
+                    {impactText(c.impact.level)}
+                  </span>
+                </div>
+
+                <div className="impact-row">
+                  <span className="impact-label">Now</span>
+                  <div className="bar">
+                    <div className="bar-fill bar-partial" style={{ width: c.impact.before + "%" }}></div>
+                  </div>
+                  <span className="muted">{c.impact.before}%</span>
+                </div>
+
+                <div className="impact-row">
+                  <span className="impact-label">With {c.name}</span>
+                  <div className="bar">
+                    <div className="bar-fill bar-covered" style={{ width: c.impact.after + "%" }}></div>
+                  </div>
+                  <span className="muted">
+                    {c.impact.after}% ({c.impact.change >= 0 ? "+" : ""}{c.impact.change})
+                  </span>
+                </div>
+
+                <ul className="impact-notes">
+                  {c.impact.notes.map(function (n, i) {
+                    return (
+                      <li key={i} className={n.kind === "good" ? "success" : "error"}>
+                        {n.text}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
 
             <div className="project-actions">
               <Link to={"/student/" + c._id} className="link-btn">

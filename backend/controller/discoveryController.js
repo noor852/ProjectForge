@@ -4,6 +4,7 @@ const Request = require("../models/Request");
 const calcScore = require("../utils/matching");
 const explainMatch = require("../utils/explain");
 const { teamCoverage, teamAwareScore } = require("../utils/teamMatching");
+const { teamImpact, openRoles } = require("../utils/teamImpact");
 const { cleanText } = require("../middleware/sanitize");
 
 const PAGE_SIZE = 6;
@@ -20,12 +21,19 @@ function safeRegex(text) {
   return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 }
 
+// whole word, case-insensitive (so "react" does not match "preact")
+function exactRegex(text) {
+  return new RegExp("^" + text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i");
+}
+
 async function getProjects(req, res) {
   try {
     const search = clean(req.query.search);
     const domain = clean(req.query.domain);
     const skills = clean(req.query.skills);
     const status = clean(req.query.status);
+    const technologies = clean(req.query.technologies);
+    const teamSize = Number(req.query.teamSize);
     const page = Math.max(Number(req.query.page) || 1, 1);
 
     const filter = {};
@@ -42,6 +50,13 @@ async function getProjects(req, res) {
     }
     if (skills) {
       filter["requiredSkills.name"] = { $in: toList(skills) };
+    }
+
+    if (technologies) {
+      filter.technologies = { $in: toList(technologies).map(exactRegex) };
+    }
+    if (teamSize >= 2 && teamSize <= 4) {
+      filter.teamSize = teamSize;
     }
 
     const total = await Project.countDocuments(filter);
@@ -65,7 +80,7 @@ async function getProjects(req, res) {
 async function getProjectDetail(req, res) {
   try {
     const project = await Project.findById(req.params.id)
-      .populate("owner", "name skills")
+      .populate("owner", "name skills preferredRoles")
       .populate("members.user", "name skills");
     if (!project) {
       return res.status(404).json({ message: "Project not found!" });
@@ -105,7 +120,8 @@ async function getProjectDetail(req, res) {
       coverage: coverage.skills,
       summary: coverage.summary,
       gaps: coverage.gaps,
-      openSpots: openSpots
+      openSpots: openSpots,
+      openRoles: openRoles(project)
     });
   } catch (err) {
     res.status(404).json({ message: "Project not found!" });
@@ -172,7 +188,8 @@ async function getTeamCandidates(req, res) {
         gapScore: r.gapScore,
         fills: r.fills,
         overlap: r.overlap,
-        reasons: explainMatch(project, u, base, { fills: r.fills, overlap: r.overlap })
+        reasons: explainMatch(project, u, base, { fills: r.fills, overlap: r.overlap }),
+        impact: teamImpact(project, team, u)        // Feature 9
       });
     }
 
@@ -197,4 +214,75 @@ async function getTeamCandidates(req, res) {
   }
 }
 
-module.exports = { getProjects, getProjectDetail, getStudentProjects, getTeamCandidates };
+
+// ---------- Feature 5: recommend projects to the logged-in student ----------
+// GET /api/projects/recommended
+// Every open project gets a team-aware score for ME, so a project whose gaps I can fill ranks higher.
+async function getRecommendations(req, res) {
+  try {
+    const me = req.user;
+    const myId = me._id.toString();
+
+    const projects = await Project.find({
+      status: { $in: ["looking", "forming"] },
+      owner: { $ne: me._id },
+      "members.user": { $ne: me._id }
+    })
+      .populate("owner", "name skills preferredRoles")
+      .populate("members.user", "name skills")
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    // projects where I already have something pending
+    const pending = await Request.find({ student: me._id, status: "pending" });
+    const pendingIds = pending.map(function (r) { return r.project.toString(); });
+
+    const result = [];
+    for (let i = 0; i < projects.length; i++) {
+      const p = projects[i];
+
+      const team = [p.owner];
+      for (let j = 0; j < p.members.length; j++) {
+        team.push(p.members[j].user);
+      }
+
+      const coverage = teamCoverage(p, team);
+      const r = teamAwareScore(p, me, coverage);
+      const base = calcScore(p, me);
+
+      let openSpots = p.teamSize - team.length;
+      if (openSpots < 0) {
+        openSpots = 0;
+      }
+
+      result.push({
+        _id: p._id,
+        title: p.title,
+        domain: p.domain,
+        status: p.status,
+        owner: p.owner.name,
+        teamCount: team.length,
+        teamSize: p.teamSize,
+        openSpots: openSpots,
+        requiredSkills: p.requiredSkills,
+        score: r.score,
+        fills: r.fills,
+        pending: pendingIds.indexOf(p._id.toString()) !== -1,
+        reasons: explainMatch(p, me, base, { fills: r.fills, overlap: r.overlap })
+      });
+    }
+
+    result.sort(function (a, b) {
+      return b.score - a.score;
+    });
+
+    res.json({
+      profileEmpty: me.skills.length === 0,
+      projects: result.slice(0, 6)
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+module.exports = { getProjects, getProjectDetail, getStudentProjects, getTeamCandidates, getRecommendations };
