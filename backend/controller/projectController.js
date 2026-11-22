@@ -4,6 +4,7 @@ const calcScore = require("../utils/matching");
 const explainMatch = require("../utils/explain");
 const updateStatus = require("../utils/teamStatus");
 const { cleanText } = require("../middleware/sanitize");
+const { getAvailableSlots } = require("../utils/teamCapacity");
 
 // take only the allowed fields from the request body
 function getFields(body) {
@@ -69,11 +70,17 @@ async function updateProject(req, res) {
     const fields = getFields(req.body);
 
     // the team size cannot be smaller than the people already in the team (owner counts too)
-    const teamCount = project.members.length + 1;
-    if (fields.teamSize !== undefined && Number(fields.teamSize) < teamCount) {
-      return res.status(400).json({
-        message: "Team size cannot be smaller than the current team (" + teamCount + ")."
-      });
+    // owner + actual members + pending reservations
+    if (fields.teamSize !== undefined) {
+      const availableSlots = await getAvailableSlots(project);
+      const reservedCount = project.teamSize - availableSlots;
+      const newTeamSize = Number(fields.teamSize);
+
+      if (newTeamSize < reservedCount) {
+        return res.status(400).json({
+          message: "Team size cannot be smaller than the current team and pending reservations (" + reservedCount + ")."
+        });
+      }
     }
 
     // forming and complete are automatic, the owner cannot set them by hand
