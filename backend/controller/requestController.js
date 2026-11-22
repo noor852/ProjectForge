@@ -136,8 +136,16 @@ async function respondToRequest(req, res) {
 
     // refresh the request because its status may have changed
     request = await Request.findById(req.params.id).populate("project");
+    if (request.status === "expired") {
+      return res.status(400).json({
+        message: "This invitation has expired."
+      });
+    }
+
     if (request.status !== "pending") {
-      return res.status(400).json({ message: "This request was already answered." });
+      return res.status(400).json({
+        message: "This request has already been answered."
+      });
     }
 
     // who is allowed to answer?

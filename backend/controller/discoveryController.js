@@ -79,13 +79,19 @@ async function getProjects(req, res) {
   }
 }
 
+
 async function getProjectDetail(req, res) {
   try {
     const project = await Project.findById(req.params.id)
       .populate("owner", "name skills preferredRoles")
       .populate("members.user", "name skills");
+
     if (!project) {
       return res.status(404).json({ message: "Project not found!" });
+    }
+
+    if (!project.owner) {
+      return res.status(404).json({ message: "Project owner no longer exists." });
     }
 
     const me = req.user._id.toString();
@@ -93,15 +99,23 @@ async function getProjectDetail(req, res) {
 
     let isMember = false;
     const team = [project.owner];
+
     for (let i = 0; i < project.members.length; i++) {
-      team.push(project.members[i].user);
-      if (project.members[i].user._id.toString() === me) {
+      const memberUser = project.members[i].user;
+
+      // Skip members whose user documents no longer exist
+      if (!memberUser) {
+        continue;
+      }
+
+      team.push(memberUser);
+
+      if (memberUser._id.toString() === me) {
         isMember = true;
       }
     }
 
     const coverage = teamCoverage(project, team);
-
     const openSpots = Math.max(0, await getAvailableSlots(project));
 
     const pending = await Request.findOne({
@@ -122,10 +136,13 @@ async function getProjectDetail(req, res) {
       openSpots: openSpots,
       openRoles: openRoles(project)
     });
+
   } catch (err) {
-    res.status(404).json({ message: "Project not found!" });
+    console.error("Get project detail error:", err);
+    res.status(500).json({ message: "Could not load project details." });
   }
 }
+
 
 async function getStudentProjects(req, res) {
   try {

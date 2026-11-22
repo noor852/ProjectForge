@@ -302,6 +302,20 @@ function ProjectDetail() {
           </div>
 
           {project.members.map(function (m) {
+            // handle members whose user document was deleted too - bug fixed here
+            if (!m.user) {
+              return (
+                <div className="team-member" key={String(m._id || Math.random())}>
+                  <div className="member-avatar">?</div>
+                  <div className="member-info">
+                    <strong>Unknown user</strong>
+                    <span>Member account no longer exists</span>
+                  </div>
+                  <span className="member-label">Unavailable</span>
+                </div>
+              );
+            }
+
             const isSelf = m.user._id === meId;
 
             return (
