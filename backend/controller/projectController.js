@@ -5,6 +5,8 @@ const explainMatch = require("../utils/explain");
 const updateStatus = require("../utils/teamStatus");
 const { cleanText } = require("../middleware/sanitize");
 const { getAvailableSlots } = require("../utils/teamCapacity");
+const Request = require("../models/Request");
+const { removeRequestNotifications } = require("../utils/notify");
 
 // take only the allowed fields from the request body
 function getFields(body) {
@@ -106,21 +108,42 @@ async function updateProject(req, res) {
   }
 }
 
+
 async function deleteProject(req, res) {
   try {
     const project = await Project.findById(req.params.id);
+
     if (!project) {
       return res.status(404).json({ message: "Project not found!" });
     }
+
     if (project.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Only the owner can delete this project!" });
+      return res.status(403).json({
+        message: "Only the owner can delete this project!"
+      });
     }
+
+    // Find all requests and invitations belonging to this project
+    const requests = await Request.find({ project: project._id });
+
+    // Remove their associated notifications
+    for (let i = 0; i < requests.length; i++) {
+      await removeRequestNotifications(requests[i]._id);
+    }
+
+    // Delete all associated requests and invitations
+    await Request.deleteMany({ project: project._id });
+
+    // Delete the project
     await Project.findByIdAndDelete(req.params.id);
+
     res.json({ message: "Project deleted" });
+
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 }
+
 
 async function getCandidates(req, res) {
   try {

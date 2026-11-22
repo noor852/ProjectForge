@@ -116,7 +116,14 @@ async function getMyRequests(req, res) {
       .populate("student", "name")
       .sort({ createdAt: -1 });
 
-    res.json({ received: received, sent: sent });
+    const validReceived = received.filter(function (r) {
+      return r.project !== null;
+    });
+
+    const validSent = sent.filter(function (r) {
+      return r.project !== null;
+    });
+    res.json({ received: validReceived, sent: validSent });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
